@@ -13,14 +13,6 @@ const DEFAULT_CODE = `# Welcome to Python IDE!
 # Write your Python code here
 
 print("Hello, World!")
-
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-
-for i in range(10):
-    print(f"fibonacci({i}) = {fibonacci(i)}")
 `;
 
 function App() {
@@ -192,10 +184,11 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-hidden">
             <CodeMirror
               value={code}
-              style={{ height: "100%", fontSize: 16, background: "#181c2a" }}
+              style={{ fontSize: 16 }}
+              className="[&>.cm-editor]:h-full h-full"
               extensions={[python()]}
               theme={oneDark}
               onChange={(value) => setCode(value)}
@@ -253,7 +246,7 @@ function App() {
             </div>
           </div>
           <div className="flex-1 min-h-0 bg-[#101420] p-4">
-            <div ref={xtermRef} className="w-full h-full" />
+            <div ref={xtermRef} className="w-full h-full scheme-dark" />
           </div>
         </div>
       </div>
