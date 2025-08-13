@@ -44,11 +44,11 @@ function App() {
 
   // Fit terminal to container
   useEffect(() => {
-    if (xterm) {
+    if (xterm && showTerminal) {
       const fitAddon = new FitAddon();
       xterm.loadAddon(fitAddon);
-      fitAddon.fit();
       xterm.options.fontSize = 16;
+      fitAddon.fit();
     }
   }, [xterm, showTerminal]);
 
@@ -110,12 +110,12 @@ function App() {
       {/* Header */}
       <header
         className={cn(
-          "h-14 flex justify-between items-center px-6",
+          "h-14 flex justify-between items-center px-4 py-3",
           "bg-gray-900 border-b border-gray-800 shadow-md z-10"
         )}
       >
         <div className="flex items-center gap-3">
-          <Code className="w-7 h-7 text-blue-400" />
+          <img src="/favicon.png" className="size-7"></img>
           <span className="text-2xl font-bold tracking-tight">Python IDE</span>
         </div>
         <div className="flex gap-2">
@@ -123,7 +123,7 @@ function App() {
             onClick={runCode}
             disabled={isLoading}
             className={cn(
-              "flex items-center gap-2 px-4 py-2",
+              "flex items-center gap-2 px-4 py-1.5 text-sm",
               "bg-blue-600 hover:bg-blue-700",
               "disabled:bg-gray-600 disabled:cursor-not-allowed",
               "text-white font-semibold rounded-lg text-sm shadow"
@@ -136,7 +136,7 @@ function App() {
           <button
             onClick={() => setShowTerminal((v) => !v)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2",
+              "flex items-center gap-2 px-3 py-1.5 text-sm",
               "bg-gray-700 hover:bg-gray-600",
               "text-white font-semibold rounded-lg text-sm shadow"
             )}
@@ -156,10 +156,11 @@ function App() {
         <div
           className={cn(
             "flex flex-col flex-1 transition-all duration-300",
-            showTerminal ? "lg:w-1/2" : "w-full"
+            showTerminal ? "lg:w-1/2" : "w-full",
+            showTerminal ? "border-r border-gray-700" : ""
           )}
         >
-          <div className="flex items-center justify-between h-12 px-6 py-2 bg-gray-800 border-b border-gray-700">
+          <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
               <Code className="w-4 h-4" />
               Code Editor
@@ -183,7 +184,7 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden scheme-dark">
             <CodeMirror
               value={code}
               style={{ fontSize: 16 }}
@@ -226,7 +227,7 @@ function App() {
             showTerminal ? undefined : "hidden"
           )}
         >
-          <div className="flex items-center justify-between h-12 px-6 py-2 bg-gray-800 border-b border-gray-700">
+          <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4" />
               <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
@@ -244,9 +245,10 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex-1 min-h-0 bg-[#101420] p-4">
-            <div ref={xtermRef} className="w-full h-full scheme-dark" />
-          </div>
+          <div
+            ref={xtermRef}
+            className="w-full scheme-dark flex-1 min-h-0 [&>.xterm]:p-4"
+          />
         </div>
       </div>
       {/* Footer */}
