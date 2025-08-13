@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
+import CodeMirror from "@uiw/react-codemirror";
 import { FitAddon } from "@xterm/addon-fit";
+import { Code, Copy, Play, RefreshCw, Terminal, Trash2 } from "lucide-react";
 import { loadPyodide, type PyodideAPI } from "pyodide";
-import { useXTerm } from "./hooks/xterm";
-import { filterError } from "./utils/ide";
-import { cn } from "./utils/cn";
-import { Play, Trash2, Code, Terminal, RefreshCw, Copy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { useXTerm } from "~/hooks/xterm";
+import { cn } from "~/utils/cn";
+import { filterError } from "~/utils/ide";
 
 const DEFAULT_CODE = `# Welcome to Python IDE!
 # Write your Python code here
@@ -26,18 +27,19 @@ function App() {
   // Load Pyodide on mount
   useEffect(() => {
     const initPyodide = async () => {
+      if (!xterm) return;
       try {
         const pyodide = await loadPyodide();
         pyodideRef.current = pyodide;
-        xterm?.clear();
-        xterm?.writeln(
+        xterm.clear();
+        xterm.writeln(
           "\x1b[36mPython runtime loaded. Ready to execute code.\x1b[0m"
         );
       } catch (error) {
-        xterm?.writeln(`Error: ${error}`);
+        xterm.writeln(`Error: ${error}`);
       }
     };
-    if (xterm) initPyodide();
+    initPyodide();
   }, [xterm]);
 
   // Fit terminal to container
@@ -67,10 +69,7 @@ function App() {
 
       const globals = pyodide.globals.get("dict")();
       try {
-        await pyodide.runPythonAsync(code, {
-          globals,
-          filename: "main.py",
-        });
+        await pyodide.runPythonAsync(code, { globals, filename: "main.py" });
         await pyodide.runPythonAsync("print(flush=True)");
       } finally {
         globals.clear();

@@ -28,4 +28,7 @@ export function viteStaticCopyPyodide() {
 export default defineConfig({
   optimizeDeps: { exclude: ["pyodide"] },
   plugins: [react(), tailwindcss(), viteStaticCopyPyodide()],
+  resolve: {
+    alias: { "~": "/src" },
+  },
 });
