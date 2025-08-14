@@ -1,10 +1,7 @@
+import Editor from "@monaco-editor/react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Code, Copy, Play, Terminal, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-
-import { python } from "@codemirror/lang-python";
-import { oneDark } from "@codemirror/theme-one-dark";
-import CodeMirror from "@uiw/react-codemirror";
 
 import { usePyodideWorker } from "~/hooks/pyodide";
 import { useXTerm } from "~/hooks/xterm";
@@ -174,17 +171,20 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-hidden scheme-dark">
-            <CodeMirror
+          <div className="flex-1 overflow-hidden">
+            <Editor
+              height="100%"
+              defaultLanguage="python"
               value={code}
-              style={{ fontSize: 16 }}
-              className="[&>.cm-editor]:h-full h-full"
-              extensions={[python()]}
-              theme={oneDark}
-              onChange={(value) => setCode(value)}
-              basicSetup={{
-                lineNumbers: true,
+              onChange={(value) => setCode(value || "")}
+              theme="vs-dark"
+              options={{
+                fontSize: 16,
+                lineNumbers: "on",
                 tabSize: 4,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
               }}
             />
           </div>
