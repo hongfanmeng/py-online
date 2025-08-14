@@ -1,11 +1,12 @@
+import { FitAddon } from "@xterm/addon-fit";
+import { Code, Copy, Play, Terminal, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
-import { FitAddon } from "@xterm/addon-fit";
-import { Code, Copy, Play, Terminal, Trash2 } from "lucide-react";
-import { loadPyodide, type PyodideAPI } from "pyodide";
-import { useEffect, useRef, useState } from "react";
 
+import { usePyodideWorker } from "~/hooks/pyodide";
 import { useXTerm } from "~/hooks/xterm";
 import { cn } from "~/utils/cn";
 import { filterError } from "~/utils/ide";
@@ -18,30 +19,30 @@ print("Hello, World!")
 
 function App() {
   const [code, setCode] = useState(DEFAULT_CODE);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const [showTerminal, setShowTerminal] = useState(true);
 
-  const pyodideRef = useRef<PyodideAPI>(null);
   const { ref: xtermRef, instance: xterm } = useXTerm();
+  const { isReady, error, runCode: runCodeInWorker } = usePyodideWorker();
 
-  // Load Pyodide on mount
   useEffect(() => {
-    const initPyodide = async () => {
-      if (!xterm) return;
-      try {
-        xterm.writeln("\x1b[36mLoading Python runtime, please wait...\x1b[0m");
-        const pyodide = await loadPyodide();
-        pyodideRef.current = pyodide;
-        xterm.clear();
-        xterm.writeln(
-          "\x1b[36mPython runtime loaded. Ready to execute code.\x1b[0m"
-        );
-      } catch (error) {
-        xterm.writeln(`Error: ${error}`);
-      }
-    };
-    initPyodide();
-  }, [xterm]);
+    if (!xterm) return;
+
+    if (!isReady && !error) {
+      xterm.writeln("\x1b[36mLoading Python runtime, please wait...\x1b[0m");
+      return;
+    }
+
+    if (isReady) {
+      xterm.clear();
+      xterm.writeln("\x1b[36mPython runtime loaded. Ready to run.\x1b[0m");
+      return;
+    }
+
+    if (error) {
+      xterm.writeln(`\x1b[31mError loading Python runtime: ${error}\x1b[0m`);
+    }
+  }, [xterm, isReady, error]);
 
   // Fit terminal to container
   useEffect(() => {
@@ -53,36 +54,30 @@ function App() {
   }, [xterm, showTerminal]);
 
   const runCode = async () => {
-    if (!pyodideRef.current || !xterm) return;
-    setIsLoading(true);
+    if (!isReady || !xterm || isRunning) return;
+
+    setIsRunning(true);
     xterm.clear();
 
     try {
-      const pyodide = pyodideRef.current;
-      pyodide.setStdout({
-        raw: (charCode: number) => {
-          const char = String.fromCharCode(charCode);
-          if (char === "\n") xterm.writeln("");
-          else xterm.write(char);
-        },
-      });
+      const result = await runCodeInWorker(code);
 
-      const globals = pyodide.globals.get("dict")();
-      try {
-        await pyodide.runPythonAsync(code, { globals, filename: "main.py" });
-        await pyodide.runPythonAsync("print(flush=True)");
-      } finally {
-        globals.clear();
-        globals.destroy();
+      if (result.output) {
+        result.output.split("\n").forEach((line) => xterm.writeln(line));
       }
 
-      xterm.writeln("\x1b[32m=== Code Execution Successful ===\x1b[0m");
+      // Display error if any
+      if (result.error) {
+        const lines = filterError(result.error.split("\n"));
+        for (const line of lines) xterm.writeln(line);
+        xterm.writeln("\x1b[31m=== Code Exited With Errors ===\x1b[0m");
+      } else {
+        xterm.writeln("\x1b[32m=== Code Execution Successful ===\x1b[0m");
+      }
     } catch (error: unknown) {
-      const lines = filterError(String((error as Error).message).split("\n"));
-      for (const line of lines) xterm.writeln(line);
-      xterm.writeln("\x1b[31m=== Code Exited With Errors ===\x1b[0m");
+      xterm.writeln(`\x1b[31mError: ${error}\x1b[0m`);
     } finally {
-      setIsLoading(false);
+      setIsRunning(false);
     }
   };
 
@@ -114,7 +109,7 @@ function App() {
         <div className="flex gap-2">
           <button
             onClick={runCode}
-            disabled={isLoading}
+            disabled={!isReady || isRunning}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5",
               "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white",
@@ -124,7 +119,7 @@ function App() {
             title="Run Code"
           >
             <Play className="w-4 h-4" />
-            <span>{isLoading ? "Running..." : "Run"}</span>
+            <span>{isRunning ? "Running..." : "Run"}</span>
           </button>
           <button
             onClick={() => setShowTerminal((v) => !v)}
@@ -161,6 +156,7 @@ function App() {
             </h3>
             <div className="flex gap-2">
               <button
+                disabled={isRunning || !isReady}
                 onClick={runCode}
                 className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
                 title="Run Code"
@@ -188,27 +184,7 @@ function App() {
               onChange={(value) => setCode(value)}
               basicSetup={{
                 lineNumbers: true,
-                highlightActiveLineGutter: true,
-                highlightSpecialChars: true,
-                foldGutter: true,
-                drawSelection: true,
-                dropCursor: true,
-                allowMultipleSelections: true,
-                indentOnInput: true,
-                bracketMatching: true,
-                closeBrackets: true,
-                autocompletion: true,
-                rectangularSelection: true,
-                crosshairCursor: true,
-                highlightActiveLine: true,
-                highlightSelectionMatches: true,
-                closeBracketsKeymap: true,
-                defaultKeymap: true,
-                searchKeymap: true,
-                historyKeymap: true,
-                foldKeymap: true,
-                completionKeymap: true,
-                lintKeymap: true,
+                tabSize: 4,
               }}
             />
           </div>
@@ -248,7 +224,7 @@ function App() {
       {/* Footer */}
       <footer className="h-8 flex items-center justify-center bg-gray-900 border-t border-gray-800 text-xs text-gray-400">
         <span>
-          Python runs in your browser via{" "}
+          Python runs in a web worker via{" "}
           <a
             href="https://pyodide.org"
             className="text-blue-400 hover:underline"

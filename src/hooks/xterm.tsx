@@ -41,7 +41,7 @@ export function useXTerm({ options, addons, listeners }: UseXTermProps = {}) {
     const instance = new Terminal({
       fontFamily:
         "operator mono,SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace",
-      fontSize: 14,
+      fontSize: 16,
       theme: { background: "#101420" },
       cursorStyle: "underline",
       cursorBlink: false,
