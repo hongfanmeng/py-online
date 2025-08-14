@@ -2,7 +2,7 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
 import { FitAddon } from "@xterm/addon-fit";
-import { Code, Copy, Play, RefreshCw, Terminal, Trash2 } from "lucide-react";
+import { Code, Copy, Play, Terminal, Trash2 } from "lucide-react";
 import { loadPyodide, type PyodideAPI } from "pyodide";
 import { useEffect, useRef, useState } from "react";
 
@@ -22,13 +22,14 @@ function App() {
   const [showTerminal, setShowTerminal] = useState(true);
 
   const pyodideRef = useRef<PyodideAPI>(null);
-  const { ref: xtermRef, instance: xterm } = useXTerm({});
+  const { ref: xtermRef, instance: xterm } = useXTerm();
 
   // Load Pyodide on mount
   useEffect(() => {
     const initPyodide = async () => {
       if (!xterm) return;
       try {
+        xterm.writeln("\x1b[36mLoading Python runtime, please wait...\x1b[0m");
         const pyodide = await loadPyodide();
         pyodideRef.current = pyodide;
         xterm.clear();
@@ -47,7 +48,6 @@ function App() {
     if (xterm && showTerminal) {
       const fitAddon = new FitAddon();
       xterm.loadAddon(fitAddon);
-      xterm.options.fontSize = 16;
       fitAddon.fit();
     }
   }, [xterm, showTerminal]);
@@ -88,13 +88,6 @@ function App() {
 
   const clearOutput = () => {
     xterm?.clear();
-    xterm?.writeln("\x1b[90mOutput cleared.\x1b[0m");
-  };
-
-  const resetEditor = () => {
-    setCode(DEFAULT_CODE);
-    xterm?.clear();
-    xterm?.writeln("\x1b[36mEditor reset to default code.\x1b[0m");
   };
 
   const copyCode = async () => {
@@ -123,10 +116,10 @@ function App() {
             onClick={runCode}
             disabled={isLoading}
             className={cn(
-              "flex items-center gap-2 px-4 py-1.5 text-sm",
-              "bg-blue-600 hover:bg-blue-700",
-              "disabled:bg-gray-600 disabled:cursor-not-allowed",
-              "text-white font-semibold rounded-lg text-sm shadow"
+              "flex items-center gap-2 px-3 py-1.5",
+              "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white",
+              "cursor-pointer disabled:cursor-not-allowed",
+              "font-semibold rounded-lg shadow text-sm"
             )}
             title="Run Code"
           >
@@ -136,9 +129,10 @@ function App() {
           <button
             onClick={() => setShowTerminal((v) => !v)}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 text-sm",
-              "bg-gray-700 hover:bg-gray-600",
-              "text-white font-semibold rounded-lg text-sm shadow"
+              "flex items-center gap-2 px-3 py-1.5",
+              "bg-gray-700 hover:bg-gray-600 text-white",
+              "cursor-pointer",
+              "font-semibold rounded-lg shadow text-sm"
             )}
             title={showTerminal ? "Hide Terminal" : "Show Terminal"}
           >
@@ -167,16 +161,16 @@ function App() {
             </h3>
             <div className="flex gap-2">
               <button
-                onClick={resetEditor}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs"
-                title="Reset Editor"
+                onClick={runCode}
+                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
+                title="Run Code"
               >
-                <RefreshCw className="w-3 h-3" />
-                Reset
+                <Play className="w-3 h-3" />
+                Run
               </button>
               <button
                 onClick={copyCode}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs"
+                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
                 title="Copy Code"
               >
                 <Copy className="w-3 h-3" />
@@ -237,7 +231,7 @@ function App() {
             <div className="flex gap-2">
               <button
                 onClick={clearOutput}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs"
+                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
                 title="Clear Output"
               >
                 <Trash2 className="w-3 h-3" />
