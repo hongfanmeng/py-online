@@ -1,10 +1,11 @@
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import crossOriginIsolation from "vite-plugin-cross-origin-isolation";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const PYODIDE_EXCLUDE = [
   "!**/*.{md,html}",
@@ -27,7 +28,12 @@ export function viteStaticCopyPyodide() {
 
 export default defineConfig({
   optimizeDeps: { exclude: ["pyodide"] },
-  plugins: [react(), tailwindcss(), viteStaticCopyPyodide()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    viteStaticCopyPyodide(),
+    crossOriginIsolation(),
+  ],
   worker: { format: "es" },
   resolve: {
     alias: { "~": "/src" },

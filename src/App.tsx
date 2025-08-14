@@ -12,6 +12,8 @@ const DEFAULT_CODE = `# Welcome to Python IDE!
 # Write your Python code here
 
 print("Hello, World!")
+name = input("Enter your name: ")
+print(f"Hello, {name}!")
 `;
 
 function App() {
@@ -20,7 +22,31 @@ function App() {
   const [showTerminal, setShowTerminal] = useState(true);
 
   const { ref: xtermRef, instance: xterm } = useXTerm();
-  const { isReady, error, runCode: runCodeInWorker } = usePyodideWorker();
+
+  const getInputLine = () =>
+    new Promise<string>((resolve) => {
+      let line = "";
+      const disposable = xterm?.onData((data) => {
+        if (data.includes("\n") || data.includes("\r")) {
+          const input = data.split(/\r|\n/)[0];
+          line += input;
+          xterm?.write(input);
+          disposable?.dispose();
+          resolve(line);
+        } else {
+          line += data;
+          xterm?.write(data);
+        }
+      });
+    });
+
+  const {
+    isReady,
+    error,
+    runCode: runCodeInWorker,
+  } = usePyodideWorker({
+    getInputLine,
+  });
 
   useEffect(() => {
     if (!xterm) return;
