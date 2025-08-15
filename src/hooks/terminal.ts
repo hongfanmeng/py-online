@@ -61,16 +61,26 @@ export const useTerminalStatus = (
   }, [xterm, isReady, error]);
 };
 
-// Fits terminal to container when shown
+// Fits terminal to container when shown and on window resize
 export const useTerminalFit = (
   xterm: Terminal | null,
   showTerminal: boolean
 ) => {
   useEffect(() => {
-    if (xterm && showTerminal) {
-      const fitAddon = new FitAddon();
-      xterm.loadAddon(fitAddon);
+    if (!xterm || !showTerminal) return;
+
+    const fitAddon = new FitAddon();
+    xterm.loadAddon(fitAddon);
+    fitAddon.fit();
+
+    const handleResize = () => {
       fitAddon.fit();
-    }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, [xterm, showTerminal]);
 };
