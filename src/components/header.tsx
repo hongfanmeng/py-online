@@ -1,14 +1,15 @@
-import { Play } from "lucide-react";
+import { Play, Square } from "lucide-react";
 import { cn } from "~/utils/cn";
 import { ThemeToggle } from "~/components/theme-toggle";
 
 export type HeaderProps = {
   isReady: boolean;
   isRunning: boolean;
-  onRunCode: () => void;
+  onRun: () => void;
+  onStop: () => void;
 };
 
-export const Header = ({ isReady, isRunning, onRunCode }: HeaderProps) => {
+export const Header = ({ isReady, isRunning, onRun, onStop }: HeaderProps) => {
   return (
     <header
       className={cn(
@@ -24,18 +25,25 @@ export const Header = ({ isReady, isRunning, onRunCode }: HeaderProps) => {
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={onRunCode}
-          disabled={!isReady || isRunning}
+          onClick={isRunning ? onStop : onRun}
+          disabled={!isReady}
           className={cn(
             "flex items-center gap-2 px-3 py-1",
-            "bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground text-primary-foreground",
+            isRunning
+              ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              : "bg-primary hover:bg-primary/90 text-primary-foreground",
+            "disabled:bg-muted disabled:text-muted-foreground",
             "cursor-pointer disabled:cursor-not-allowed",
-            "font-semibold rounded text-sm border border-primary hover:border-primary/90 disabled:border-muted"
+            "font-semibold rounded text-sm border disabled:border-muted"
           )}
-          title="Run Code"
+          title={isRunning ? "Stop Code" : "Run Code"}
         >
-          <Play className="size-3" />
-          <span>{isRunning ? "Running..." : "Run"}</span>
+          {isRunning ? (
+            <Square className="size-3" />
+          ) : (
+            <Play className="size-3" />
+          )}
+          <span>{isRunning ? "Stop" : "Run"}</span>
         </button>
         <ThemeToggle />
       </div>

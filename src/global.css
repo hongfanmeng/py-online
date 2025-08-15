@@ -19,6 +19,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 }
 
 :root {
@@ -35,6 +37,8 @@
   --accent: var(--color-blue-50);
   --accent-foreground: var(--color-blue-700);
   --border: var(--color-zinc-200);
+  --destructive: var(--color-red-600);
+  --destructive-foreground: var(--color-white);
   --radius: 0.5rem;
 }
 
@@ -52,6 +56,8 @@
   --accent: var(--color-blue-900);
   --accent-foreground: var(--color-blue-100);
   --border: var(--color-zinc-700);
+  --destructive: var(--color-red-700);
+  --destructive-foreground: var(--color-white);
 }
 
 @layer base {

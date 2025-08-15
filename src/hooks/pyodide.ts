@@ -17,9 +17,12 @@ export interface UsePyodideWorkerProps {
 export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const workerRef = useRef<Worker | null>(null);
   const workerAPIRef = useRef<Remote<PyodideWorkerAPI> | null>(null);
+
   const sharedInputBufferRef = useRef<SharedArrayBuffer | null>(null);
+  const interruptBufferRef = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     if (!crossOriginIsolated) {
@@ -35,9 +38,12 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
       return;
     }
 
-    // Create worker
+    // create buffer
     const sharedInputBuffer = new SharedArrayBuffer(1024);
+    const interruptBuffer = new Uint8Array(new SharedArrayBuffer(1));
     sharedInputBufferRef.current = sharedInputBuffer;
+    interruptBufferRef.current = interruptBuffer;
+
     const worker = new PyodideWorker();
     const workerAPI = wrap<PyodideWorkerAPI>(worker);
 
@@ -48,7 +54,9 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
     const initPyodide = async () => {
       try {
         setError(null);
-        await workerAPI.init(sharedInputBuffer);
+        await workerAPI.init();
+        workerAPI.setInputBuffer(sharedInputBuffer);
+        workerAPI.setInterruptBuffer(interruptBuffer);
         setIsReady(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -102,5 +110,11 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
     }
   };
 
-  return { isReady, error, runCode };
+  const stop = () => {
+    if (interruptBufferRef.current) {
+      interruptBufferRef.current[0] = 2;
+    }
+  };
+
+  return { isReady, error, runCode, stop };
 }

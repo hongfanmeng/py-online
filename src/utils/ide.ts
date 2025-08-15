@@ -1,7 +1,6 @@
 export const filterError = (lines: string[]) => {
   const isPyodideFile = (line: string) =>
     line.includes('File "/lib/python313.zip/_pyodide/_base.py"') ||
-    line.includes('File "/lib/python') ||
     line.includes("_pyodide/_base.py");
 
   const isInstallationMessage = (line: string) =>

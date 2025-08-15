@@ -1,28 +1,35 @@
 import { Editor } from "@monaco-editor/react";
-import { Code, Copy, Play } from "lucide-react";
-import { cn } from "~/utils/cn";
+import { Code, Copy, Play, Square } from "lucide-react";
 import { useTheme } from "~/components/theme-provider";
+import { cn } from "~/utils/cn";
 
 export type EditorPanelProps = {
   code: string;
   onCodeChange: (value: string) => void;
   isRunning: boolean;
   isReady: boolean;
-  onRunCode: () => void;
-  onCopyCode: () => void;
+  onRun: () => void;
+  onStop: () => void;
 };
 
-// Editor panel component
 export const EditorPanel = ({
   code,
   onCodeChange,
   isRunning,
   isReady,
-  onRunCode,
-  onCopyCode,
+  onRun,
+  onStop,
 }: EditorPanelProps) => {
   const { computedTheme } = useTheme();
   const editorTheme = computedTheme === "dark" ? "vs-dark" : "vs";
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      // fallback: do nothing
+    }
+  };
 
   return (
     <div className="flex flex-col border-r border-border h-full">
@@ -33,24 +40,26 @@ export const EditorPanel = ({
         </h3>
         <div className="flex gap-2">
           <button
-            disabled={isRunning || !isReady}
-            onClick={onRunCode}
+            disabled={!isReady}
+            onClick={isRunning ? onStop : onRun}
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded text-xs",
-              "bg-secondary hover:bg-secondary/80 text-secondary-foreground disabled:bg-muted disabled:text-muted-foreground",
+              "disabled:bg-muted disabled:text-muted-foreground",
+              "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
               "cursor-pointer disabled:cursor-not-allowed"
             )}
-            title="Run Code"
+            title={isRunning ? "Stop Code" : "Run Code"}
           >
-            <Play className="w-3 h-3" />
-            Run
+            {isRunning && <Square className="size-2.5" />}
+            {!isRunning && <Play className="size-2.5" />}
+            {isRunning ? "Stop" : "Run"}
           </button>
           <button
-            onClick={onCopyCode}
+            onClick={onCopy}
             className="flex items-center gap-1 px-2 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded text-xs cursor-pointer"
             title="Copy Code"
           >
-            <Copy className="w-3 h-3" />
+            <Copy className="size-2.5" />
             Copy
           </button>
         </div>

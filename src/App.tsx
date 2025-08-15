@@ -26,11 +26,12 @@ function App() {
     isReady,
     error,
     runCode: runCodeInWorker,
+    stop: onStop,
   } = usePyodideWorker({ stdin, stdout });
 
   useTerminalStatus(xterm, isReady, error);
 
-  const runCode = async () => {
+  const onRun = async () => {
     if (!isReady || !xterm || isRunning) return;
 
     setIsRunning(true);
@@ -60,18 +61,15 @@ function App() {
     xterm?.clear();
   };
 
-  const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-    } catch {
-      // fallback: do nothing
-    }
-  };
-
   return (
     <ThemeProvider defaultTheme="system">
       <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        <Header isReady={isReady} isRunning={isRunning} onRunCode={runCode} />
+        <Header
+          isReady={isReady}
+          isRunning={isRunning}
+          onRun={onRun}
+          onStop={onStop}
+        />
 
         <Split
           className="flex flex-row flex-1"
@@ -92,8 +90,8 @@ function App() {
             onCodeChange={setCode}
             isRunning={isRunning}
             isReady={isReady}
-            onRunCode={runCode}
-            onCopyCode={copyCode}
+            onRun={onRun}
+            onStop={onStop}
           />
           <TerminalPanel
             xterm={xterm}
