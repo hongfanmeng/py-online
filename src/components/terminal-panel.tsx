@@ -25,7 +25,7 @@ export const TerminalPanel = ({
       computedTheme == "light" ? XTERM_LIGHT_THEME : XTERM_DARK_THEME;
   }, [xterm, computedTheme]);
 
-  useTerminalFit(xterm);
+  useTerminalFit(xtermRef, xterm);
 
   return (
     <div className="flex flex-col border-l border-border h-full">

@@ -66,10 +66,12 @@ export const useTerminalStatus = (
   }, [xterm, isReady, error]);
 };
 
-// Fits terminal to container when shown and on window resize
-export const useTerminalFit = (xterm: Terminal | null) => {
+export const useTerminalFit = (
+  xtermRef: React.RefObject<HTMLDivElement | null>,
+  xterm: Terminal | null
+) => {
   useEffect(() => {
-    if (!xterm) return;
+    if (!xterm || !xtermRef.current) return;
 
     const fitAddon = new FitAddon();
     xterm.loadAddon(fitAddon);
@@ -78,6 +80,12 @@ export const useTerminalFit = (xterm: Terminal | null) => {
     const handleResize = () => fitAddon.fit();
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [xterm]);
+    const observer = new window.ResizeObserver(handleResize);
+    observer.observe(xtermRef.current);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      observer.disconnect();
+    };
+  }, [xterm, xtermRef]);
 };
