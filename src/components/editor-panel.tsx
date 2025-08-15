@@ -1,6 +1,7 @@
 import { Editor } from "@monaco-editor/react";
 import { Code, Copy, Play } from "lucide-react";
 import { cn } from "~/utils/cn";
+import { useTheme } from "~/components/theme-provider";
 
 export type EditorPanelProps = {
   code: string;
@@ -22,16 +23,19 @@ export const EditorPanel = ({
   onCopyCode,
   showTerminal,
 }: EditorPanelProps) => {
+  const { computedTheme } = useTheme();
+  const editorTheme = computedTheme === "dark" ? "vs-dark" : "vs";
+
   return (
     <div
       className={cn(
         "flex flex-col flex-1",
         showTerminal ? "lg:w-1/2" : "w-full",
-        showTerminal ? "border-r border-zinc-700" : ""
+        showTerminal ? "border-r border-border" : ""
       )}
     >
-      <div className="flex items-center justify-between h-12 px-4 py-2 bg-zinc-800 border-b border-zinc-700">
-        <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+      <div className="flex items-center justify-between h-12 px-4 py-2 bg-card border-b border-border">
+        <h3 className="text-sm font-semibold text-card-foreground uppercase tracking-wider flex items-center gap-2">
           <Code className="w-4 h-4" />
           Code Editor
         </h3>
@@ -41,7 +45,7 @@ export const EditorPanel = ({
             onClick={onRunCode}
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded text-xs",
-              "bg-zinc-700 hover:bg-zinc-600 text-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500",
+              "bg-secondary hover:bg-secondary/80 text-secondary-foreground disabled:bg-muted disabled:text-muted-foreground",
               "cursor-pointer disabled:cursor-not-allowed"
             )}
             title="Run Code"
@@ -51,7 +55,7 @@ export const EditorPanel = ({
           </button>
           <button
             onClick={onCopyCode}
-            className="flex items-center gap-1 px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded text-xs cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded text-xs cursor-pointer"
             title="Copy Code"
           >
             <Copy className="w-3 h-3" />
@@ -65,7 +69,7 @@ export const EditorPanel = ({
           defaultLanguage="python"
           value={code}
           onChange={(value) => onCodeChange(value || "")}
-          theme="vs-dark"
+          theme={editorTheme}
           options={{
             fontSize: 16,
             lineNumbers: "on",

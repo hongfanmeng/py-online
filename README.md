@@ -81,6 +81,17 @@ pnpm build
 
 The built files will be in the `dist` directory.
 
+#### Environment Variables
+
+The build process supports the following environment variable:
+
+- `VITE_SITE_URL`: The site URL used in Open Graph and Twitter meta tags (defaults to `https://py-online.pages.dev/`)
+
+Example:
+```bash
+VITE_SITE_URL=https://my-python-editor.com/ pnpm build
+```
+
 ## Usage
 
 ### Basic Python Code Execution

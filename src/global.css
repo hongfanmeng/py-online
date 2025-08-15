@@ -1,12 +1,64 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+:root {
+  --background: var(--color-zinc-50);
+  --foreground: var(--color-zinc-900);
+  --card: var(--color-white);
+  --card-foreground: var(--color-zinc-900);
+  --primary: var(--color-blue-600);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-zinc-100);
+  --secondary-foreground: var(--color-zinc-800);
+  --muted: var(--color-zinc-100);
+  --muted-foreground: var(--color-zinc-500);
+  --accent: var(--color-blue-50);
+  --accent-foreground: var(--color-blue-700);
+  --border: var(--color-zinc-200);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: var(--color-zinc-900);
+  --foreground: var(--color-zinc-100);
+  --card: var(--color-zinc-800);
+  --card-foreground: var(--color-zinc-100);
+  --primary: var(--color-blue-500);
+  --primary-foreground: var(--color-white);
+  --secondary: var(--color-zinc-700);
+  --secondary-foreground: var(--color-zinc-100);
+  --muted: var(--color-zinc-800);
+  --muted-foreground: var(--color-zinc-400);
+  --accent: var(--color-blue-900);
+  --accent-foreground: var(--color-blue-100);
+  --border: var(--color-zinc-700);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

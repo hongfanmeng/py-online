@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { EditorPanel, Footer, Header, TerminalPanel } from "~/components";
+import { ThemeProvider } from "~/components/theme-provider";
 import { usePyodideWorker } from "~/hooks/pyodide";
-import {
-  useTerminalFit,
-  useTerminalIO,
-  useTerminalStatus,
-} from "~/hooks/terminal";
+import { useTerminalIO, useTerminalStatus } from "~/hooks/terminal";
 import { useXTerm } from "~/hooks/xterm";
 import { filterError } from "~/utils/ide";
 
-const DEFAULT_CODE = `# Welcome to Python IDE!
+const DEFAULT_CODE = `# Welcome to Online Python!
 # Write your Python code here
 
 print("Hello, World!")
@@ -31,9 +28,7 @@ function App() {
     runCode: runCodeInWorker,
   } = usePyodideWorker({ stdin, stdout });
 
-  // Terminal status and fitting effects
   useTerminalStatus(xterm, isReady, error);
-  useTerminalFit(xterm, showTerminal);
 
   const runCode = async () => {
     if (!isReady || !xterm || isRunning) return;
@@ -75,35 +70,38 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-900 text-white overflow-hidden">
-      <Header
-        isReady={isReady}
-        isRunning={isRunning}
-        showTerminal={showTerminal}
-        onRunCode={runCode}
-        onToggleTerminal={toggleTerminal}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        <EditorPanel
-          code={code}
-          onCodeChange={setCode}
-          isRunning={isRunning}
+    <ThemeProvider defaultTheme="system">
+      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+        <Header
           isReady={isReady}
+          isRunning={isRunning}
+          showTerminal={showTerminal}
           onRunCode={runCode}
-          onCopyCode={copyCode}
-          showTerminal={showTerminal}
+          onToggleTerminal={toggleTerminal}
         />
 
-        <TerminalPanel
-          xtermRef={xtermRef}
-          showTerminal={showTerminal}
-          onClearOutput={clearOutput}
-        />
+        <div className="flex flex-1 overflow-hidden">
+          <EditorPanel
+            code={code}
+            onCodeChange={setCode}
+            isRunning={isRunning}
+            isReady={isReady}
+            onRunCode={runCode}
+            onCopyCode={copyCode}
+            showTerminal={showTerminal}
+          />
+
+          <TerminalPanel
+            xterm={xterm}
+            xtermRef={xtermRef}
+            showTerminal={showTerminal}
+            onClearOutput={clearOutput}
+          />
+        </div>
+
+        <Footer />
       </div>
-
-      <Footer />
-    </div>
+    </ThemeProvider>
   );
 }
 

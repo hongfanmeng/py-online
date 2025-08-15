@@ -1,5 +1,6 @@
 import { Play, Terminal } from "lucide-react";
 import { cn } from "~/utils/cn";
+import { ThemeToggle } from "~/components/theme-toggle";
 
 export type HeaderProps = {
   isReady: boolean;
@@ -20,24 +21,24 @@ export const Header = ({
     <header
       className={cn(
         "h-12 flex justify-between items-center px-4 py-3",
-        "bg-zinc-800 border-b border-zinc-700 shadow-md z-10"
+        "bg-card border-b border-border z-10"
       )}
     >
       <div className="flex items-center gap-3">
-        <img src="/favicon.png" className="size-6" alt="Python IDE" />
-        <span className="text-xl font-bold tracking-tight text-zinc-300">
-          Python IDE
+        <img src="/favicon.png" className="size-6" alt="Online Python" />
+        <span className="text-xl font-bold text-card-foreground">
+          Online Python
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <button
           onClick={onRunCode}
           disabled={!isReady || isRunning}
           className={cn(
             "flex items-center gap-2 px-3 py-1",
-            "bg-blue-700 hover:bg-blue-800 disabled:bg-zinc-800 disabled:text-zinc-500 text-white",
+            "bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground text-primary-foreground",
             "cursor-pointer disabled:cursor-not-allowed",
-            "font-semibold rounded text-sm border border-blue-700 hover:border-blue-800 disabled:border-zinc-800"
+            "font-semibold rounded text-sm border border-primary hover:border-primary/90 disabled:border-muted"
           )}
           title="Run Code"
         >
@@ -48,9 +49,9 @@ export const Header = ({
           onClick={onToggleTerminal}
           className={cn(
             "flex items-center gap-2 px-3 py-1",
-            "bg-zinc-700 hover:bg-zinc-600 text-zinc-300",
+            "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
             "cursor-pointer",
-            "font-semibold rounded text-sm border border-zinc-700 hover:border-zinc-600"
+            "font-semibold rounded text-sm border border-border hover:border-border/80"
           )}
           title={showTerminal ? "Hide Terminal" : "Show Terminal"}
         >
@@ -59,6 +60,7 @@ export const Header = ({
             {showTerminal ? "Hide Terminal" : "Show Terminal"}
           </span>
         </button>
+        <ThemeToggle />
       </div>
     </header>
   );
