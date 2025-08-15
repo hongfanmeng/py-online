@@ -1,11 +1,13 @@
-import Editor from "@monaco-editor/react";
-import { FitAddon } from "@xterm/addon-fit";
-import { Code, Copy, Play, Terminal, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { EditorPanel, Footer, Header, TerminalPanel } from "~/components";
 import { usePyodideWorker } from "~/hooks/pyodide";
+import {
+  useTerminalFit,
+  useTerminalIO,
+  useTerminalStatus,
+} from "~/hooks/terminal";
 import { useXTerm } from "~/hooks/xterm";
-import { cn } from "~/utils/cn";
 import { filterError } from "~/utils/ide";
 
 const DEFAULT_CODE = `# Welcome to Python IDE!
@@ -23,68 +25,18 @@ function App() {
 
   const { ref: xtermRef, instance: xterm } = useXTerm();
 
-  const getUserInput = () =>
-    new Promise<string>((resolve) => {
-      let line = "";
-      const disposable = xterm?.onData((data) => {
-        if (data.includes("\n") || data.includes("\r")) {
-          const input = data.split(/\r|\n/)[0];
-          line += input;
-          xterm?.writeln(input);
-          disposable?.dispose();
-          resolve(line);
-        } else {
-          line += data;
-          xterm?.write(data);
-        }
-      });
-    });
-
-  const stdout = (charCode: number) => {
-    const char = String.fromCharCode(charCode);
-    if (char === "\n") {
-      xterm?.writeln("");
-    } else {
-      xterm?.write(char);
-    }
-  };
+  // Custom hooks for terminal functionality
+  const { stdin, stdout } = useTerminalIO(xterm);
 
   const {
     isReady,
     error,
     runCode: runCodeInWorker,
-  } = usePyodideWorker({
-    getUserInput: getUserInput,
-    stdout,
-  });
+  } = usePyodideWorker({ stdin, stdout });
 
-  useEffect(() => {
-    if (!xterm) return;
-
-    if (!isReady && !error) {
-      xterm.writeln("\x1b[36mLoading Python runtime, please wait...\x1b[0m");
-      return;
-    }
-
-    if (isReady) {
-      xterm.clear();
-      xterm.writeln("\x1b[36mPython runtime loaded. Ready to run.\x1b[0m");
-      return;
-    }
-
-    if (error) {
-      xterm.writeln(`\x1b[31mError loading Python runtime: ${error}\x1b[0m`);
-    }
-  }, [xterm, isReady, error]);
-
-  // Fit terminal to container
-  useEffect(() => {
-    if (xterm && showTerminal) {
-      const fitAddon = new FitAddon();
-      xterm.loadAddon(fitAddon);
-      fitAddon.fit();
-    }
-  }, [xterm, showTerminal]);
+  // Terminal status and fitting effects
+  useTerminalStatus(xterm, isReady, error);
+  useTerminalFit(xterm, showTerminal);
 
   const runCode = async () => {
     if (!isReady || !xterm || isRunning) return;
@@ -96,8 +48,8 @@ function App() {
 
     // Display error if any
     if (result.error) {
-      const lines = filterError(result.error.split("\n"));
-      for (const line of lines) xterm.writeln(line);
+      const errorLines = filterError(result.error.split("\n"));
+      for (const line of errorLines) xterm.writeln(line);
     }
 
     if (result.success) {
@@ -105,6 +57,8 @@ function App() {
     } else {
       xterm.writeln("\x1b[31m=== Code Exited With Errors ===\x1b[0m");
     }
+
+    setIsRunning(false);
   };
 
   const clearOutput = () => {
@@ -119,152 +73,39 @@ function App() {
     }
   };
 
+  const toggleTerminal = () => {
+    setShowTerminal((prev) => !prev);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-blue-950 text-white overflow-hidden">
-      {/* Header */}
-      <header
-        className={cn(
-          "h-14 flex justify-between items-center px-4 py-3",
-          "bg-gray-900 border-b border-gray-800 shadow-md z-10"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <img src="/favicon.png" className="size-7"></img>
-          <span className="text-2xl font-bold tracking-tight">Python IDE</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={runCode}
-            disabled={!isReady || isRunning}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5",
-              "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white",
-              "cursor-pointer disabled:cursor-not-allowed",
-              "font-semibold rounded-lg shadow text-sm"
-            )}
-            title="Run Code"
-          >
-            <Play className="w-4 h-4" />
-            <span>{isRunning ? "Running..." : "Run"}</span>
-          </button>
-          <button
-            onClick={() => setShowTerminal((v) => !v)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5",
-              "bg-gray-700 hover:bg-gray-600 text-white",
-              "cursor-pointer",
-              "font-semibold rounded-lg shadow text-sm"
-            )}
-            title={showTerminal ? "Hide Terminal" : "Show Terminal"}
-          >
-            <Terminal className="w-4 h-4" />
-            <span className="hidden md:inline">
-              {showTerminal ? "Hide Terminal" : "Show Terminal"}
-            </span>
-          </button>
-        </div>
-      </header>
+      <Header
+        isReady={isReady}
+        isRunning={isRunning}
+        showTerminal={showTerminal}
+        onRunCode={runCode}
+        onToggleTerminal={toggleTerminal}
+      />
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Panel */}
-        <div
-          className={cn(
-            "flex flex-col flex-1 transition-all duration-300",
-            showTerminal ? "lg:w-1/2" : "w-full",
-            showTerminal ? "border-r border-gray-700" : ""
-          )}
-        >
-          <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
-              <Code className="w-4 h-4" />
-              Code Editor
-            </h3>
-            <div className="flex gap-2">
-              <button
-                disabled={isRunning || !isReady}
-                onClick={runCode}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
-                title="Run Code"
-              >
-                <Play className="w-3 h-3" />
-                Run
-              </button>
-              <button
-                onClick={copyCode}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
-                title="Copy Code"
-              >
-                <Copy className="w-3 h-3" />
-                Copy
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <Editor
-              height="100%"
-              defaultLanguage="python"
-              value={code}
-              onChange={(value) => setCode(value || "")}
-              theme="vs-dark"
-              options={{
-                fontSize: 16,
-                lineNumbers: "on",
-                tabSize: 4,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-              }}
-            />
-          </div>
-        </div>
+        <EditorPanel
+          code={code}
+          onCodeChange={setCode}
+          isRunning={isRunning}
+          isReady={isReady}
+          onRunCode={runCode}
+          onCopyCode={copyCode}
+          showTerminal={showTerminal}
+        />
 
-        {/* Terminal Panel */}
-        <div
-          className={cn(
-            "flex flex-col lg:w-1/2 w-full bg-[#101420] border-l border-gray-800 transition-all duration-300",
-            showTerminal ? undefined : "hidden"
-          )}
-        >
-          <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
-            <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4" />
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                Output Terminal
-              </h3>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={clearOutput}
-                className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
-                title="Clear Output"
-              >
-                <Trash2 className="w-3 h-3" />
-                Clear
-              </button>
-            </div>
-          </div>
-          <div
-            ref={xtermRef}
-            className="w-full scheme-dark flex-1 min-h-0 [&>.xterm]:p-4"
-          />
-        </div>
+        <TerminalPanel
+          xtermRef={xtermRef}
+          showTerminal={showTerminal}
+          onClearOutput={clearOutput}
+        />
       </div>
-      {/* Footer */}
-      <footer className="h-8 flex items-center justify-center bg-gray-900 border-t border-gray-800 text-xs text-gray-400">
-        <span>
-          Python runs in a web worker via{" "}
-          <a
-            href="https://pyodide.org"
-            className="text-blue-400 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Pyodide
-          </a>
-          . &copy; {new Date().getFullYear()}
-        </span>
-      </footer>
+
+      <Footer />
     </div>
   );
 }

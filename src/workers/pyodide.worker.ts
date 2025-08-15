@@ -1,6 +1,11 @@
 import { expose } from "comlink";
 import { loadPyodide, type PyodideAPI } from "pyodide";
 
+// Constants
+const INPUT_LENGTH_INDEX = 1;
+const INPUT_DATA_OFFSET = 8;
+
+// Types
 export interface PyodideWorkerAPI {
   init(sharedInputBuffer: SharedArrayBuffer): Promise<void>;
   runCode(code: string): Promise<{ success: boolean; error?: string }>;
@@ -38,53 +43,75 @@ class PyodideWorker implements PyodideWorkerAPI {
     this.requestStdinInput = requestStdin;
   }
 
+  private setupStdoutCapture() {
+    if (!this.pyodide) return;
+
+    this.pyodide.setStdout({
+      raw: (charCode: number) => {
+        this.stdout?.(charCode);
+      },
+    });
+  }
+
+  private setupStdinCapture() {
+    if (!this.pyodide) return;
+
+    this.pyodide.setStdin({
+      stdin: () => {
+        if (!this.sharedInputBuffer) return "";
+
+        // Request input from the main thread
+        this.requestStdinInput?.();
+
+        // Wait for the main thread to provide input
+        Atomics.wait(new Int32Array(this.sharedInputBuffer), 0, 0);
+
+        // Read the input string from the shared buffer
+        const inputBufferBytes = new Uint8Array(this.sharedInputBuffer);
+        const bufferControlArray = new Int32Array(this.sharedInputBuffer);
+        const inputLength = bufferControlArray[INPUT_LENGTH_INDEX];
+        const inputDataBytes = inputBufferBytes.slice(
+          INPUT_DATA_OFFSET,
+          INPUT_DATA_OFFSET + inputLength
+        );
+        const inputString = new TextDecoder().decode(inputDataBytes);
+
+        return inputString;
+      },
+    });
+  }
+
+  private async executePythonCode(code: string): Promise<void> {
+    if (!this.pyodide) {
+      throw new Error("Pyodide not initialized");
+    }
+
+    const globals = this.pyodide.globals.get("dict")();
+
+    try {
+      await this.pyodide.runPythonAsync(code, {
+        globals,
+        filename: "main.py",
+      });
+      await this.pyodide.runPythonAsync("print(flush=True)");
+    } finally {
+      globals.clear();
+      globals.destroy();
+    }
+  }
+
   async runCode(code: string): Promise<{ success: boolean; error?: string }> {
     if (!this.pyodide) {
       throw new Error("Pyodide not initialized");
     }
 
     try {
-      // Set up stdout capture
-      this.pyodide.setStdout({
-        raw: (charCode: number) => {
-          this.stdout?.(charCode);
-        },
-      });
+      // Set up I/O capture
+      this.setupStdoutCapture();
+      this.setupStdinCapture();
 
-      // Set up stdin with synchronous Atomics-based communication
-      this.pyodide.setStdin({
-        stdin: () => {
-          if (!this.sharedInputBuffer) return "";
-
-          // Request input from the main thread
-          this.requestStdinInput?.();
-
-          // Wait for the main thread to provide input
-          Atomics.wait(new Int32Array(this.sharedInputBuffer), 0, 0);
-
-          // Read the input string from the shared buffer
-          const inputBufferBytes = new Uint8Array(this.sharedInputBuffer);
-          const bufferControlArray = new Int32Array(this.sharedInputBuffer);
-          const inputLength = bufferControlArray[1]; // Length stored at index 1
-          const inputDataBytes = inputBufferBytes.slice(8, 8 + inputLength); // Input data starts at byte 8
-          const inputString = new TextDecoder().decode(inputDataBytes);
-
-          return inputString;
-        },
-      });
-
-      const globals = this.pyodide.globals.get("dict")();
-
-      try {
-        await this.pyodide.runPythonAsync(code, {
-          globals,
-          filename: "main.py",
-        });
-        await this.pyodide.runPythonAsync("print(flush=True)");
-      } finally {
-        globals.clear();
-        globals.destroy();
-      }
+      // Execute the Python code
+      await this.executePythonCode(code);
 
       return { success: true };
     } catch (error: unknown) {

@@ -10,14 +10,11 @@ interface RunCodeResult {
 }
 
 export interface UsePyodideWorkerProps {
-  getUserInput?: () => Promise<string>;
+  stdin?: () => Promise<string>;
   stdout?: (charCode: number) => void;
 }
 
-export function usePyodideWorker({
-  getUserInput: getInputLine,
-  stdout,
-}: UsePyodideWorkerProps = {}) {
+export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -58,7 +55,7 @@ export function usePyodideWorker({
     if (!workerAPIRef.current) return;
 
     const handleStdinRequest = async () => {
-      const userInput = await getInputLine?.();
+      const userInput = await stdin?.();
       const inputString = userInput || "";
 
       // Write the input string to the shared buffer
@@ -76,10 +73,9 @@ export function usePyodideWorker({
       Atomics.notify(new Int32Array(sharedInputBufferRef.current!), 0);
     };
 
-    workerAPIRef.current.setStdin(Comlink.proxy(handleStdinRequest));
-
+    if (stdin) workerAPIRef.current.setStdin(Comlink.proxy(handleStdinRequest));
     if (stdout) workerAPIRef.current.setStdout(Comlink.proxy(stdout));
-  }, [workerAPIRef, getInputLine, stdout]);
+  }, [workerAPIRef, stdin, stdout]);
 
   const runCode = async (code: string): Promise<RunCodeResult> => {
     if (!workerAPIRef.current) {
