@@ -13,8 +13,6 @@ const DEFAULT_CODE = `# Welcome to Python IDE!
 # Write your Python code here
 
 print("Hello, World!")
-name = input("Enter your name: ")
-print(f"Hello, {name}!")
 `;
 
 function App() {
