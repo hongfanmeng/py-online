@@ -25,13 +25,13 @@ export const EditorPanel = ({
   return (
     <div
       className={cn(
-        "flex flex-col flex-1 transition-all duration-300",
+        "flex flex-col flex-1",
         showTerminal ? "lg:w-1/2" : "w-full",
-        showTerminal ? "border-r border-gray-700" : ""
+        showTerminal ? "border-r border-zinc-700" : ""
       )}
     >
-      <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+      <div className="flex items-center justify-between h-12 px-4 py-2 bg-zinc-800 border-b border-zinc-700">
+        <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
           <Code className="w-4 h-4" />
           Code Editor
         </h3>
@@ -39,7 +39,11 @@ export const EditorPanel = ({
           <button
             disabled={isRunning || !isReady}
             onClick={onRunCode}
-            className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded text-xs",
+              "bg-zinc-700 hover:bg-zinc-600 text-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500",
+              "cursor-pointer disabled:cursor-not-allowed"
+            )}
             title="Run Code"
           >
             <Play className="w-3 h-3" />
@@ -47,7 +51,7 @@ export const EditorPanel = ({
           </button>
           <button
             onClick={onCopyCode}
-            className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded text-xs cursor-pointer"
             title="Copy Code"
           >
             <Copy className="w-3 h-3" />

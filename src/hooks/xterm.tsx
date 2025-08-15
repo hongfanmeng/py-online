@@ -42,7 +42,7 @@ export function useXTerm({ options, addons, listeners }: UseXTermProps = {}) {
       fontFamily:
         "operator mono,SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace",
       fontSize: 16,
-      theme: { background: "#101420" },
+      theme: { background: "#1e1e1e" },
       cursorStyle: "underline",
       cursorBlink: false,
       ...options,

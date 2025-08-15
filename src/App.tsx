@@ -78,7 +78,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-blue-950 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-zinc-900 text-white overflow-hidden">
       <Header
         isReady={isReady}
         isRunning={isRunning}

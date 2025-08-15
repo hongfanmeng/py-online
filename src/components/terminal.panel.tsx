@@ -16,21 +16,21 @@ export const TerminalPanel = ({
   return (
     <div
       className={cn(
-        "flex flex-col lg:w-1/2 w-full bg-[#101420] border-l border-gray-800 transition-all duration-300",
-        showTerminal ? undefined : "hidden"
+        "flex flex-col lg:w-1/2 w-full bg-zinc-900 border-l border-zinc-700",
+        showTerminal ? "" : "hidden"
       )}
     >
-      <div className="flex items-center justify-between h-12 px-4 py-2 bg-gray-800 border-b border-gray-700">
+      <div className="flex items-center justify-between h-12 px-4 py-2 bg-zinc-800 border-b border-zinc-700">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4" />
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+          <Terminal className="w-4 h-4 text-zinc-300" />
+          <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
             Output Terminal
           </h3>
         </div>
         <div className="flex gap-2">
           <button
             onClick={onClearOutput}
-            className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-xs cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded text-xs cursor-pointer"
             title="Clear Output"
           >
             <Trash2 className="w-3 h-3" />

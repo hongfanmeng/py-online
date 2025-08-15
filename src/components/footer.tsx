@@ -1,11 +1,11 @@
 export const Footer = () => {
   return (
-    <footer className="h-8 flex items-center justify-center bg-gray-900 border-t border-gray-800 text-xs text-gray-400">
+    <footer className="h-8 flex items-center justify-center bg-[#2d2d30] border-t border-[#3c3c3c] text-xs text-[#969696]">
       <span>
         Python runs in a web worker via{" "}
         <a
           href="https://pyodide.org"
-          className="text-blue-400 hover:underline"
+          className="text-[#007acc] hover:underline"
           target="_blank"
           rel="noopener noreferrer"
         >
