@@ -25,7 +25,7 @@ export const EditorPanel = ({
   const editorTheme = computedTheme === "dark" ? "vs-dark" : "vs";
 
   return (
-    <div className="flex flex-col flex-1 border-r border-border">
+    <div className="flex flex-col border-r border-border h-full">
       <div className="flex items-center justify-between h-12 px-4 py-2 bg-card border-b border-border">
         <h3 className="text-sm font-semibold text-card-foreground uppercase tracking-wider flex items-center gap-2">
           <Code className="w-4 h-4" />

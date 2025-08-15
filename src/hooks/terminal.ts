@@ -67,25 +67,17 @@ export const useTerminalStatus = (
 };
 
 // Fits terminal to container when shown and on window resize
-export const useTerminalFit = (
-  xterm: Terminal | null,
-  showTerminal: boolean
-) => {
+export const useTerminalFit = (xterm: Terminal | null) => {
   useEffect(() => {
-    if (!xterm || !showTerminal) return;
+    if (!xterm) return;
 
     const fitAddon = new FitAddon();
     xterm.loadAddon(fitAddon);
     fitAddon.fit();
 
-    const handleResize = () => {
-      fitAddon.fit();
-    };
+    const handleResize = () => fitAddon.fit();
 
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [xterm, showTerminal]);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [xterm]);
 };

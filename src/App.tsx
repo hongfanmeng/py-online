@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Split from "react-split";
 import { EditorPanel, Footer, Header, TerminalPanel } from "~/components";
 import { ThemeProvider } from "~/components/theme-provider";
 import { usePyodideWorker } from "~/hooks/pyodide";
@@ -15,7 +16,6 @@ print("Hello, World!")
 function App() {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [isRunning, setIsRunning] = useState(false);
-  const [showTerminal, setShowTerminal] = useState(true);
 
   const { ref: xtermRef, instance: xterm } = useXTerm();
 
@@ -68,22 +68,25 @@ function App() {
     }
   };
 
-  const toggleTerminal = () => {
-    setShowTerminal((prev) => !prev);
-  };
-
   return (
     <ThemeProvider defaultTheme="system">
       <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        <Header
-          isReady={isReady}
-          isRunning={isRunning}
-          showTerminal={showTerminal}
-          onRunCode={runCode}
-          onToggleTerminal={toggleTerminal}
-        />
+        <Header isReady={isReady} isRunning={isRunning} onRunCode={runCode} />
 
-        <div className="flex flex-1 overflow-hidden">
+        <Split
+          className="flex flex-row flex-1"
+          direction="horizontal"
+          minSize={500}
+          gutterSize={0}
+          gutter={() => {
+            const gutter = document.createElement("div");
+            gutter.className = "relative cursor-col-resize z-10";
+            const child = document.createElement("div");
+            child.className = "absolute left-0 top-0 h-full w-6 bg-transparent";
+            gutter.appendChild(child);
+            return gutter;
+          }}
+        >
           <EditorPanel
             code={code}
             onCodeChange={setCode}
@@ -92,14 +95,12 @@ function App() {
             onRunCode={runCode}
             onCopyCode={copyCode}
           />
-
           <TerminalPanel
             xterm={xterm}
             xtermRef={xtermRef}
-            showTerminal={showTerminal}
             onClearOutput={clearOutput}
           />
-        </div>
+        </Split>
 
         <Footer />
       </div>

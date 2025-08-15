@@ -1,7 +1,6 @@
 import { Trash2, TerminalIcon } from "lucide-react";
 import { useEffect } from "react";
 import { Terminal } from "@xterm/xterm";
-import { cn } from "~/utils/cn";
 import { useTheme } from "~/components/theme-provider";
 import { useTerminalFit } from "~/hooks/terminal";
 import { XTERM_DARK_THEME, XTERM_LIGHT_THEME } from "~/utils/xterm-theme";
@@ -9,7 +8,6 @@ import { XTERM_DARK_THEME, XTERM_LIGHT_THEME } from "~/utils/xterm-theme";
 export type TerminalPanelProps = {
   xtermRef: React.RefObject<HTMLDivElement | null>;
   xterm: Terminal | null;
-  showTerminal: boolean;
   onClearOutput: () => void;
 };
 
@@ -17,7 +15,6 @@ export type TerminalPanelProps = {
 export const TerminalPanel = ({
   xtermRef,
   xterm,
-  showTerminal,
   onClearOutput,
 }: TerminalPanelProps) => {
   const { computedTheme } = useTheme();
@@ -28,15 +25,10 @@ export const TerminalPanel = ({
       computedTheme == "light" ? XTERM_LIGHT_THEME : XTERM_DARK_THEME;
   }, [xterm, computedTheme]);
 
-  useTerminalFit(xterm, showTerminal);
+  useTerminalFit(xterm);
 
   return (
-    <div
-      className={cn(
-        "flex-1 flex flex-col border-l border-border",
-        showTerminal ? "" : "hidden"
-      )}
-    >
+    <div className="flex flex-col border-l border-border h-full">
       <div className="flex items-center justify-between h-12 px-4 py-2 bg-card border-b border-border">
         <div className="flex items-center gap-2">
           <TerminalIcon className="w-4 h-4 text-card-foreground" />
@@ -55,7 +47,10 @@ export const TerminalPanel = ({
           </button>
         </div>
       </div>
-      <div ref={xtermRef} className="w-full flex-1 min-h-0 [&>.xterm]:p-4" />
+      <div
+        ref={xtermRef}
+        className="w-full flex-1 min-h-0 [&>.xterm]:p-4 dark:scheme-dark"
+      />
     </div>
   );
 };

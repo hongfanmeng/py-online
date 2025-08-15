@@ -1,22 +1,14 @@
-import { Play, Terminal } from "lucide-react";
+import { Play } from "lucide-react";
 import { cn } from "~/utils/cn";
 import { ThemeToggle } from "~/components/theme-toggle";
 
 export type HeaderProps = {
   isReady: boolean;
   isRunning: boolean;
-  showTerminal: boolean;
   onRunCode: () => void;
-  onToggleTerminal: () => void;
 };
 
-export const Header = ({
-  isReady,
-  isRunning,
-  showTerminal,
-  onRunCode,
-  onToggleTerminal,
-}: HeaderProps) => {
+export const Header = ({ isReady, isRunning, onRunCode }: HeaderProps) => {
   return (
     <header
       className={cn(
@@ -44,21 +36,6 @@ export const Header = ({
         >
           <Play className="size-3" />
           <span>{isRunning ? "Running..." : "Run"}</span>
-        </button>
-        <button
-          onClick={onToggleTerminal}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1",
-            "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
-            "cursor-pointer",
-            "font-semibold rounded text-sm border border-border hover:border-border/80"
-          )}
-          title={showTerminal ? "Hide Terminal" : "Show Terminal"}
-        >
-          <Terminal className="size-3" />
-          <span className="hidden md:inline">
-            {showTerminal ? "Hide Terminal" : "Show Terminal"}
-          </span>
         </button>
         <ThemeToggle />
       </div>
