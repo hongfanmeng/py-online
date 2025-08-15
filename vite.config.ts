@@ -52,5 +52,4 @@ export default defineConfig({
   resolve: {
     alias: { "~": "/src" },
   },
-  logLevel: "error",
 });

@@ -42,18 +42,21 @@ export const useTerminalStatus = (
     if (!xterm) return;
 
     if (!isReady && !error) {
-      xterm.writeln("\x1b[36mLoading Python runtime, please wait...\x1b[0m");
+      xterm.writeln("\x1b[33mLoading Python runtime, please wait...\x1b[0m");
       return;
     }
 
     if (isReady) {
       xterm.clear();
-      xterm.writeln("\x1b[36mPython runtime loaded. Ready to run.\x1b[0m");
+      xterm.writeln("\x1b[32mPython runtime loaded. Ready to run.\x1b[0m");
       return;
     }
 
     if (error) {
-      xterm.writeln(`\x1b[31mError loading Python runtime: ${error}\x1b[0m`);
+      const errorLines = error.split("\n");
+      for (const line of errorLines) {
+        xterm.writeln(`\x1b[31m${line}\x1b[0m`);
+      }
     }
   }, [xterm, isReady, error]);
 };

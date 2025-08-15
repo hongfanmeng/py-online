@@ -22,6 +22,19 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
   const sharedInputBufferRef = useRef<SharedArrayBuffer | null>(null);
 
   useEffect(() => {
+    if (!crossOriginIsolated) {
+      setError(
+        [
+          "SharedArrayBuffer is not supported in this environment. ",
+          "Please ensure the page is served with the following HTTP headers:",
+          "  Cross-Origin-Opener-Policy: same-origin",
+          "  Cross-Origin-Embedder-Policy: require-corp",
+          "These headers are required for Pyodide to function properly.",
+        ].join("\n")
+      );
+      return;
+    }
+
     // Create worker
     const sharedInputBuffer = new SharedArrayBuffer(1024);
     sharedInputBufferRef.current = sharedInputBuffer;
@@ -52,7 +65,7 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
   }, []);
 
   useEffect(() => {
-    if (!workerAPIRef.current) return;
+    if (!workerAPIRef.current || !crossOriginIsolated) return;
 
     const handleStdinRequest = async () => {
       const userInput = await stdin?.();
