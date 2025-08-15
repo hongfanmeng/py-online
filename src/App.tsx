@@ -23,7 +23,7 @@ function App() {
 
   const { ref: xtermRef, instance: xterm } = useXTerm();
 
-  const getInputLine = () =>
+  const getUserInput = () =>
     new Promise<string>((resolve) => {
       let line = "";
       const disposable = xterm?.onData((data) => {
@@ -54,7 +54,7 @@ function App() {
     error,
     runCode: runCodeInWorker,
   } = usePyodideWorker({
-    getInputLine,
+    getUserInput: getUserInput,
     stdout,
   });
 
@@ -92,25 +92,18 @@ function App() {
     setIsRunning(true);
     xterm.clear();
 
-    try {
-      const result = await runCodeInWorker(code);
+    const result = await runCodeInWorker(code);
 
-      if (result.output) {
-        result.output.split("\n").forEach((line) => xterm.writeln(line));
-      }
+    // Display error if any
+    if (result.error) {
+      const lines = filterError(result.error.split("\n"));
+      for (const line of lines) xterm.writeln(line);
+    }
 
-      // Display error if any
-      if (result.error) {
-        const lines = filterError(result.error.split("\n"));
-        for (const line of lines) xterm.writeln(line);
-        xterm.writeln("\x1b[31m=== Code Exited With Errors ===\x1b[0m");
-      } else {
-        xterm.writeln("\x1b[32m=== Code Execution Successful ===\x1b[0m");
-      }
-    } catch (error: unknown) {
-      xterm.writeln(`\x1b[31mError: ${error}\x1b[0m`);
-    } finally {
-      setIsRunning(false);
+    if (result.success) {
+      xterm.writeln("\x1b[32m=== Code Execution Successful ===\x1b[0m");
+    } else {
+      xterm.writeln("\x1b[31m=== Code Exited With Errors ===\x1b[0m");
     }
   };
 

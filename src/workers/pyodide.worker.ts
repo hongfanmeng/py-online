@@ -2,8 +2,8 @@ import { expose } from "comlink";
 import { loadPyodide, type PyodideAPI } from "pyodide";
 
 export interface PyodideWorkerAPI {
-  init(stdinBuffer: SharedArrayBuffer): Promise<void>;
-  runCode(code: string): Promise<{ output: string; error?: string }>;
+  init(sharedInputBuffer: SharedArrayBuffer): Promise<void>;
+  runCode(code: string): Promise<{ success: boolean; error?: string }>;
   isReady(): Promise<boolean>;
   setStdout(stdout: (charCode: number) => void): void;
   setStdin(requestStdin: () => Promise<void>): void;
@@ -11,18 +11,16 @@ export interface PyodideWorkerAPI {
 
 class PyodideWorker implements PyodideWorkerAPI {
   private pyodide: PyodideAPI | null = null;
-  private outputBuffer: string[] = [];
   private stdout: ((charCode: number) => void) | null = null;
-  private stdin: (() => Promise<void>) | null = null;
-  private stdinBuffer: SharedArrayBuffer | null = null;
+  private requestStdinInput: (() => Promise<void>) | null = null;
+  private sharedInputBuffer: SharedArrayBuffer | null = null;
 
   constructor() {}
 
-  async init(stdinBuffer: SharedArrayBuffer): Promise<void> {
+  async init(sharedInputBuffer: SharedArrayBuffer): Promise<void> {
     try {
       this.pyodide = await loadPyodide();
-      this.outputBuffer = [];
-      this.stdinBuffer = stdinBuffer;
+      this.sharedInputBuffer = sharedInputBuffer;
     } catch (error) {
       throw new Error(`Failed to initialize Pyodide: ${error}`);
     }
@@ -36,16 +34,14 @@ class PyodideWorker implements PyodideWorkerAPI {
     this.stdout = stdout;
   }
 
-  setStdin(stdin: () => Promise<void>) {
-    this.stdin = stdin;
+  setStdin(requestStdin: () => Promise<void>) {
+    this.requestStdinInput = requestStdin;
   }
 
-  async runCode(code: string): Promise<{ output: string; error?: string }> {
+  async runCode(code: string): Promise<{ success: boolean; error?: string }> {
     if (!this.pyodide) {
       throw new Error("Pyodide not initialized");
     }
-
-    this.outputBuffer = [];
 
     try {
       // Set up stdout capture
@@ -58,15 +54,20 @@ class PyodideWorker implements PyodideWorkerAPI {
       // Set up stdin with synchronous Atomics-based communication
       this.pyodide.setStdin({
         stdin: () => {
-          if (!this.stdinBuffer) return "";
-          this.stdin?.();
-          Atomics.wait(new Int32Array(this.stdinBuffer), 0, 0);
+          if (!this.sharedInputBuffer) return "";
 
-          // Read the input string from the buffer
-          const uint8Array = new Uint8Array(this.stdinBuffer);
-          const length = new Int32Array(this.stdinBuffer)[1]; // Length stored at index 1
-          const stringBytes = uint8Array.slice(8, 8 + length); // String data starts at byte 8
-          const inputString = new TextDecoder().decode(stringBytes);
+          // Request input from the main thread
+          this.requestStdinInput?.();
+
+          // Wait for the main thread to provide input
+          Atomics.wait(new Int32Array(this.sharedInputBuffer), 0, 0);
+
+          // Read the input string from the shared buffer
+          const inputBufferBytes = new Uint8Array(this.sharedInputBuffer);
+          const bufferControlArray = new Int32Array(this.sharedInputBuffer);
+          const inputLength = bufferControlArray[1]; // Length stored at index 1
+          const inputDataBytes = inputBufferBytes.slice(8, 8 + inputLength); // Input data starts at byte 8
+          const inputString = new TextDecoder().decode(inputDataBytes);
 
           return inputString;
         },
@@ -85,10 +86,10 @@ class PyodideWorker implements PyodideWorkerAPI {
         globals.destroy();
       }
 
-      return { output: this.outputBuffer.join("\n") };
+      return { success: true };
     } catch (error: unknown) {
       return {
-        output: this.outputBuffer.join("\n"),
+        success: false,
         error: error instanceof Error ? error.message : String(error),
       };
     }

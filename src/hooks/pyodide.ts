@@ -5,29 +5,29 @@ import PyodideWorker from "~/workers/pyodide.worker?worker";
 import * as Comlink from "comlink";
 
 interface RunCodeResult {
-  output: string;
+  success: boolean;
   error?: string;
 }
 
 export interface UsePyodideWorkerProps {
-  getInputLine?: () => Promise<string>;
+  getUserInput?: () => Promise<string>;
   stdout?: (charCode: number) => void;
 }
 
 export function usePyodideWorker({
-  getInputLine,
+  getUserInput: getInputLine,
   stdout,
 }: UsePyodideWorkerProps = {}) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const workerAPIRef = useRef<Remote<PyodideWorkerAPI> | null>(null);
-  const stdinBufferRef = useRef<SharedArrayBuffer | null>(null);
+  const sharedInputBufferRef = useRef<SharedArrayBuffer | null>(null);
 
   useEffect(() => {
     // Create worker
-    const stdinBuffer = new SharedArrayBuffer(1024);
-    stdinBufferRef.current = stdinBuffer;
+    const sharedInputBuffer = new SharedArrayBuffer(1024);
+    sharedInputBufferRef.current = sharedInputBuffer;
     const worker = new PyodideWorker();
     const workerAPI = wrap<PyodideWorkerAPI>(worker);
 
@@ -38,7 +38,7 @@ export function usePyodideWorker({
     const initPyodide = async () => {
       try {
         setError(null);
-        await workerAPI.init(stdinBuffer);
+        await workerAPI.init(sharedInputBuffer);
         setIsReady(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -56,25 +56,27 @@ export function usePyodideWorker({
 
   useEffect(() => {
     if (!workerAPIRef.current) return;
-    const stdin = async () => {
-      const line = await getInputLine?.();
-      const inputString = line || "";
 
-      // Write the input string to the buffer
-      const uint8Array = new Uint8Array(stdinBufferRef.current!);
-      const stringBytes = new TextEncoder().encode(inputString);
-      const int32Array = new Int32Array(stdinBufferRef.current!);
+    const handleStdinRequest = async () => {
+      const userInput = await getInputLine?.();
+      const inputString = userInput || "";
 
-      // Store the length at index 1
-      int32Array[1] = stringBytes.length;
+      // Write the input string to the shared buffer
+      const inputBufferBytes = new Uint8Array(sharedInputBufferRef.current!);
+      const encodedInputBytes = new TextEncoder().encode(inputString);
+      const bufferControlArray = new Int32Array(sharedInputBufferRef.current!);
 
-      // Copy the string bytes starting at byte 8
-      uint8Array.set(stringBytes, 8);
+      // Store the input length at index 1 for the worker to read
+      bufferControlArray[1] = encodedInputBytes.length;
 
-      Atomics.notify(new Int32Array(stdinBufferRef.current!), 0);
+      // Copy the encoded input bytes starting at byte 8 (after control data)
+      inputBufferBytes.set(encodedInputBytes, 8);
+
+      // Signal the worker that input is ready
+      Atomics.notify(new Int32Array(sharedInputBufferRef.current!), 0);
     };
 
-    workerAPIRef.current.setStdin(Comlink.proxy(stdin));
+    workerAPIRef.current.setStdin(Comlink.proxy(handleStdinRequest));
 
     if (stdout) workerAPIRef.current.setStdout(Comlink.proxy(stdout));
   }, [workerAPIRef, getInputLine, stdout]);
