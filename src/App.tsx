@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import { EditorPanel, Footer, Header, TerminalPanel } from "~/components";
 import { usePyodideWorker } from "~/hooks/pyodide";
 import {

@@ -1,8 +1,8 @@
+import * as Comlink from "comlink";
 import { wrap, type Remote } from "comlink";
 import { useEffect, useRef, useState } from "react";
 import { type PyodideWorkerAPI } from "~/workers/pyodide.worker";
 import PyodideWorker from "~/workers/pyodide.worker?worker";
-import * as Comlink from "comlink";
 
 interface RunCodeResult {
   success: boolean;
