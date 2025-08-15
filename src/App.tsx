@@ -88,7 +88,6 @@ function App() {
             isReady={isReady}
             onRunCode={runCode}
             onCopyCode={copyCode}
-            showTerminal={showTerminal}
           />
 
           <TerminalPanel

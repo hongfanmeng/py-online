@@ -1,36 +1,16 @@
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "~/components/theme-provider";
 import { cn } from "~/utils/cn";
 
 export const ThemeToggle = () => {
-  const { theme, setTheme } = useTheme();
-
-  // Define the order of themes to toggle through
-  const themes: Array<"light" | "dark" | "system"> = [
-    "light",
-    "dark",
-    "system",
-  ];
-
-  // Find the next theme in the array, cycling back to the start
-  const getNextTheme = (current: "light" | "dark" | "system") => {
-    const idx = themes.indexOf(current);
-    return themes[(idx + 1) % themes.length];
-  };
+  const { setTheme, computedTheme } = useTheme();
 
   const handleToggle = () => {
-    setTheme(getNextTheme(theme as "light" | "dark" | "system"));
+    setTheme(computedTheme == "dark" ? "light" : "dark");
   };
 
-  let icon = <Monitor className="h-4 w-4 text-foreground" />;
-  let label = "System";
-  if (theme === "light") {
-    icon = <Sun className="h-4 w-4 text-foreground" />;
-    label = "Light";
-  } else if (theme === "dark") {
-    icon = <Moon className="h-4 w-4 text-foreground" />;
-    label = "Dark";
-  }
+  const Icon = computedTheme === "dark" ? Moon : Sun;
+  const label = computedTheme === "dark" ? "Dark" : "Light";
 
   return (
     <button
@@ -44,7 +24,7 @@ export const ThemeToggle = () => {
       title={`Switch theme (current: ${label})`}
       aria-label={`Switch theme (current: ${label})`}
     >
-      {icon}
+      <Icon className="size-4 text-foreground" />
       <span className="hidden md:inline">{label}</span>
     </button>
   );

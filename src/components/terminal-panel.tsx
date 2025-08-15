@@ -33,7 +33,7 @@ export const TerminalPanel = ({
   return (
     <div
       className={cn(
-        "flex flex-col lg:w-1/2 w-full bg-background border-l border-border",
+        "flex-1 flex flex-col border-l border-border",
         showTerminal ? "" : "hidden"
       )}
     >
