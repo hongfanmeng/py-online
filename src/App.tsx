@@ -30,7 +30,7 @@ function App() {
         if (data.includes("\n") || data.includes("\r")) {
           const input = data.split(/\r|\n/)[0];
           line += input;
-          xterm?.write(input);
+          xterm?.writeln(input);
           disposable?.dispose();
           resolve(line);
         } else {
@@ -40,12 +40,22 @@ function App() {
       });
     });
 
+  const stdout = (charCode: number) => {
+    const char = String.fromCharCode(charCode);
+    if (char === "\n") {
+      xterm?.writeln("");
+    } else {
+      xterm?.write(char);
+    }
+  };
+
   const {
     isReady,
     error,
     runCode: runCodeInWorker,
   } = usePyodideWorker({
     getInputLine,
+    stdout,
   });
 
   useEffect(() => {

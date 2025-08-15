@@ -5,13 +5,15 @@ export interface PyodideWorkerAPI {
   init(stdinBuffer: SharedArrayBuffer): Promise<void>;
   runCode(code: string): Promise<{ output: string; error?: string }>;
   isReady(): Promise<boolean>;
-  setRequestStdin(requestStdin: () => Promise<void>): void;
+  setStdout(stdout: (charCode: number) => void): void;
+  setStdin(requestStdin: () => Promise<void>): void;
 }
 
 class PyodideWorker implements PyodideWorkerAPI {
   private pyodide: PyodideAPI | null = null;
   private outputBuffer: string[] = [];
-  private requestStdin: (() => Promise<void>) | null = null;
+  private stdout: ((charCode: number) => void) | null = null;
+  private stdin: (() => Promise<void>) | null = null;
   private stdinBuffer: SharedArrayBuffer | null = null;
 
   constructor() {}
@@ -30,8 +32,12 @@ class PyodideWorker implements PyodideWorkerAPI {
     return this.pyodide !== null;
   }
 
-  setRequestStdin(requestStdin: () => Promise<void>) {
-    this.requestStdin = requestStdin;
+  setStdout(stdout: (charCode: number) => void) {
+    this.stdout = stdout;
+  }
+
+  setStdin(stdin: () => Promise<void>) {
+    this.stdin = stdin;
   }
 
   async runCode(code: string): Promise<{ output: string; error?: string }> {
@@ -45,15 +51,7 @@ class PyodideWorker implements PyodideWorkerAPI {
       // Set up stdout capture
       this.pyodide.setStdout({
         raw: (charCode: number) => {
-          const char = String.fromCharCode(charCode);
-          if (char === "\n") {
-            this.outputBuffer.push("");
-          } else {
-            if (this.outputBuffer.length === 0) {
-              this.outputBuffer.push("");
-            }
-            this.outputBuffer[this.outputBuffer.length - 1] += char;
-          }
+          this.stdout?.(charCode);
         },
       });
 
@@ -61,7 +59,7 @@ class PyodideWorker implements PyodideWorkerAPI {
       this.pyodide.setStdin({
         stdin: () => {
           if (!this.stdinBuffer) return "";
-          this.requestStdin?.();
+          this.stdin?.();
           Atomics.wait(new Int32Array(this.stdinBuffer), 0, 0);
 
           // Read the input string from the buffer
@@ -98,12 +96,4 @@ class PyodideWorker implements PyodideWorkerAPI {
 }
 
 const worker = new PyodideWorker();
-
-// Handle messages from main thread
-// self.addEventListener("message", (event) => {
-//   if (event.data.type === "stdin_response") {
-//     worker.receiveStdin(event.data.input);
-//   }
-// });
-
 expose(worker);
