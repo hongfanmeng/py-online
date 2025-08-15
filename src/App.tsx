@@ -38,6 +38,9 @@ function App() {
 
     const result = await runCodeInWorker(code);
 
+    // do a sleep(0) for the remaining output to be printed
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     // Display error if any
     if (result.error) {
       const errorLines = filterError(result.error.split("\n"));
