@@ -3,30 +3,35 @@ import { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
 
 export const useTerminalIO = (xterm: Terminal | null) => {
-  const stdin = () =>
-    new Promise<string>((resolve) => {
+  const stdin = () => {
+    return new Promise<string>((resolve) => {
       let inputBuffer = "";
       const disposable = xterm?.onData((data: string) => {
-        if (data.includes("\n") || data.includes("\r")) {
-          const input = data.split(/\r|\n/)[0];
-          inputBuffer += input;
-          xterm?.writeln(input);
-          disposable?.dispose();
-          resolve(inputBuffer);
-        } else {
-          inputBuffer += data;
-          xterm?.write(data);
+        for (const char of data) {
+          if (char === "\r" || char === "\n") {
+            xterm?.writeln("");
+            disposable?.dispose();
+            resolve(inputBuffer);
+            return;
+          }
+          if (char === "\x7f" || char === "\b") {
+            if (inputBuffer) {
+              inputBuffer = inputBuffer.slice(0, -1);
+              xterm?.write("\b \b");
+            }
+            continue;
+          }
+          inputBuffer += char;
+          xterm?.write(char);
         }
       });
     });
+  };
 
   const stdout = (charCode: number) => {
     const char = String.fromCharCode(charCode);
-    if (char === "\n") {
-      xterm?.writeln("");
-    } else {
-      xterm?.write(char);
-    }
+    if (char === "\n") xterm?.writeln("");
+    else xterm?.write(char);
   };
 
   return { stdin, stdout };
