@@ -18,7 +18,7 @@ export const Header = ({ isReady, isRunning, onRun, onStop }: HeaderProps) => {
       )}
     >
       <div className="flex items-center gap-3">
-        <img src="/favicon.png" className="size-6" alt="Online Python" />
+        <img src="/apple-touch-icon.png" className="size-6" alt="Icon" />
         <span className="text-xl font-bold text-card-foreground">
           Online Python
         </span>
