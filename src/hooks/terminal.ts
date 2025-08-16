@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
+import { useCallback, useEffect } from "react";
 
 export const useTerminalIO = (xterm: Terminal | null) => {
-  const stdin = () => {
+  const stdin = useCallback(() => {
     return new Promise<string>((resolve) => {
       let inputBuffer = "";
       const disposable = xterm?.onData((data: string) => {
@@ -26,13 +26,16 @@ export const useTerminalIO = (xterm: Terminal | null) => {
         }
       });
     });
-  };
+  }, [xterm]);
 
-  const stdout = (charCode: number) => {
-    const char = String.fromCharCode(charCode);
-    if (char === "\n") xterm?.writeln("");
-    else xterm?.write(char);
-  };
+  const stdout = useCallback(
+    (charCode: number) => {
+      const char = String.fromCharCode(charCode);
+      if (char === "\n") xterm?.writeln("");
+      else xterm?.write(char);
+    },
+    [xterm]
+  );
 
   return { stdin, stdout };
 };
