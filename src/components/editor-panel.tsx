@@ -1,7 +1,8 @@
-import { Editor } from "@monaco-editor/react";
 import { Code, Copy, Play, Square } from "lucide-react";
-import { useTheme } from "~/components/theme-provider";
 import { cn } from "~/utils/cn";
+import { MonacoEditor } from "./monaco-editor";
+import { useRef } from "react";
+import type { MonacoEditorLanguageClientWrapper } from "monaco-editor-wrapper";
 
 export type EditorPanelProps = {
   code: string;
@@ -20,8 +21,7 @@ export const EditorPanel = ({
   onRun,
   onStop,
 }: EditorPanelProps) => {
-  const { computedTheme } = useTheme();
-  const editorTheme = computedTheme === "dark" ? "vs-dark" : "vs";
+  const wrapperRef = useRef<MonacoEditorLanguageClientWrapper>(null);
 
   const onCopy = async () => {
     try {
@@ -65,20 +65,10 @@ export const EditorPanel = ({
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <Editor
-          height="100%"
-          defaultLanguage="python"
-          value={code}
-          onChange={(value) => onCodeChange(value || "")}
-          theme={editorTheme}
-          options={{
-            fontSize: 16,
-            lineNumbers: "on",
-            tabSize: 4,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-          }}
+        <MonacoEditor
+          wrapperRef={wrapperRef}
+          onTextChanged={(text) => onCodeChange(text.modified ?? "")}
+          className="h-full"
         />
       </div>
     </div>
