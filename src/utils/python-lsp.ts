@@ -1,12 +1,11 @@
+import { MonacoLanguageClient } from "monaco-languageclient";
+
 import pyrightWorkerUrl from "@typefox/pyright-browser/dist/pyright.worker.js?url";
-import type { LanguageClientConfig } from "monaco-editor-wrapper";
-import { Uri } from "vscode";
-import { CloseAction, ErrorAction } from "vscode-languageclient/browser.js";
 import {
   BrowserMessageReader,
   BrowserMessageWriter,
 } from "vscode-languageserver-protocol/browser.js";
-
+import { ErrorAction, CloseAction } from "vscode-languageclient";
 import { readZipFile } from "~/utils/zip";
 
 const languageId = "python";
@@ -27,34 +26,23 @@ export const getTypeshedFiles = async () => {
   );
 };
 
-export const createPythonLanguageClientConfig = (
+export const createPythonLanguageClient = (
   worker: Worker,
   typeshedFiles: { [id: string]: string }
 ) => {
   const reader = new BrowserMessageReader(worker);
   const writer = new BrowserMessageWriter(worker);
 
-  return {
+  return new MonacoLanguageClient({
     name: "Python Language Client",
     clientOptions: {
-      documentSelector: [languageId, "py"],
+      documentSelector: [languageId],
       errorHandler: {
         error: () => ({ action: ErrorAction.Continue }),
         closed: () => ({ action: CloseAction.DoNotRestart }),
       },
-      workspaceFolder: {
-        index: 0,
-        name: "workspace",
-        uri: Uri.file("/workspace"),
-      },
       initializationOptions: { files: typeshedFiles },
     },
-    connection: {
-      options: {
-        $type: "WorkerDirect",
-        worker: worker,
-      },
-      messageTransports: { reader, writer },
-    },
-  } satisfies LanguageClientConfig;
+    messageTransports: { reader, writer },
+  });
 };

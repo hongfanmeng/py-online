@@ -4,7 +4,6 @@ import { fileURLToPath } from "url";
 import type { Plugin, ViteDevServer } from "vite";
 import { defineConfig } from "vite";
 
-import importMetaUrlPlugin from "@codingame/esbuild-import-meta-url-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -51,9 +50,6 @@ const envReplacePlugin = (): Plugin => ({
 
 export default defineConfig({
   optimizeDeps: {
-    esbuildOptions: {
-      plugins: [importMetaUrlPlugin],
-    },
     exclude: ["pyodide"],
   },
   plugins: [
