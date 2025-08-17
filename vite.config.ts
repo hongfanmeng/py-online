@@ -44,7 +44,7 @@ const crossOriginIsolation = (): Plugin => ({
 const envReplacePlugin = (): Plugin => ({
   name: "env-replace",
   transformIndexHtml(html) {
-    const siteUrl = process.env.VITE_SITE_URL || "https://py-online.pages.dev/";
+    const siteUrl = process.env.VITE_SITE_URL || "https://py-online.pages.dev";
     return html.replace(/{{SITE_URL}}/g, siteUrl);
   },
 });
