@@ -1,9 +1,9 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense } from "react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import { useTheme } from "~/hooks/use-theme";
 import { initMonaco, initMonacoLSP } from "~/utils/monaco-lsp";
 import { getHighlighter } from "~/utils/shikijs";
-import type { EditorProps } from "@monaco-editor/react";
+import type { EditorProps, Monaco } from "@monaco-editor/react";
 
 export const DEFAULT_CODE = `# Welcome to Online Python!
 # Write your Python code here
@@ -16,11 +16,7 @@ initMonacoLSP();
 
 export const MonacoEditor = (props: EditorProps) => {
   const { computedTheme } = useTheme();
-  const fallbackTheme = computedTheme === "dark" ? "vs-dark" : "light";
-  const shikiTheme = computedTheme === "dark" ? "dark-plus" : "light-plus";
-
-  const [shikiLoaded, setShikiLoaded] = useState(false);
-  const theme = shikiLoaded ? shikiTheme : fallbackTheme;
+  const theme = computedTheme === "dark" ? "dark-plus" : "light-plus";
 
   return (
     <Suspense
@@ -42,12 +38,14 @@ export const MonacoEditor = (props: EditorProps) => {
           automaticLayout: true,
         }}
         beforeMount={async (monaco) => {
-          monaco.languages.register({ id: "python", extensions: [".py"] });
+          // fallback to load vs-dark and vs when shiki is not loaded
+          registerFallbackThemes(monaco);
+          // load shiki to monaco
           const highlighter = await getHighlighter();
           shikiToMonaco(highlighter, monaco);
-          setShikiLoaded(true);
         }}
         onMount={(editor, monaco) => {
+          monaco.languages.register({ id: "python", extensions: [".py"] });
           const model = monaco.editor.createModel(DEFAULT_CODE, "python");
           editor.setModel(model);
         }}
@@ -55,4 +53,19 @@ export const MonacoEditor = (props: EditorProps) => {
       />
     </Suspense>
   );
+};
+
+const registerFallbackThemes = (monaco: Monaco) => {
+  monaco.editor.defineTheme("dark-plus", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [],
+    colors: {},
+  });
+  monaco.editor.defineTheme("light-plus", {
+    base: "vs",
+    inherit: true,
+    rules: [],
+    colors: {},
+  });
 };

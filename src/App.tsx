@@ -6,7 +6,7 @@ import { TerminalPanel } from "~/components/panels/terminal-panel";
 import { ThemeProvider } from "~/components/theme/theme-provider";
 import { useAppState } from "~/hooks/use-app-state";
 import { usePyodideWorker } from "~/hooks/use-pyodide-worker";
-import { useTerminalIO } from "~/hooks/use-terminal";
+import { useTerminalIO, useTerminalStatus } from "~/hooks/use-terminal";
 import { useXTerm } from "~/hooks/use-xterm";
 import { filterPyodideErrors } from "~/utils/error-handler";
 import { DEFAULT_CODE } from "~/components/core/monaco-editor";
@@ -19,6 +19,8 @@ function App() {
   const { ref: xtermRef, instance: xterm } = useXTerm();
   const { stdin, stdout } = useTerminalIO(xterm);
   const { runCode, stop } = usePyodideWorker({ stdin, stdout });
+
+  useTerminalStatus(xterm);
 
   const executeCode = async (code: string) => {
     if (!isReady || isRunning || !xterm) return;
