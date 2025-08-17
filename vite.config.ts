@@ -53,6 +53,24 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["pyodide"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          shiki: [
+            "shiki",
+            "shiki/core",
+            "shiki/wasm",
+            "shiki/engine/oniguruma",
+            "@shikijs/monaco",
+            "@shikijs/themes/dark-plus",
+            "@shikijs/themes/light-plus",
+            "@shikijs/langs/python",
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

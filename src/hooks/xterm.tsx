@@ -1,8 +1,8 @@
-import {
-  type ITerminalAddon,
-  type ITerminalInitOnlyOptions,
-  type ITerminalOptions,
-  Terminal,
+import type {
+  ITerminalAddon,
+  ITerminalInitOnlyOptions,
+  ITerminalOptions,
+  Terminal as TerminalType,
 } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useEffect, useRef, useState } from "react";
@@ -28,9 +28,16 @@ export interface UseXTermProps {
 export function useXTerm({ options, addons, listeners }: UseXTermProps = {}) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const listenersRef = useRef<UseXTermProps["listeners"]>(listeners);
-  const [terminalInstance, setTerminalInstance] = useState<Terminal | null>(
+  const [terminalInstance, setTerminalInstance] = useState<TerminalType | null>(
     null
   );
+
+  const [Terminal, setTerminal] = useState<typeof TerminalType>();
+  useEffect(() => {
+    import("@xterm/xterm").then(({ Terminal }) => {
+      setTerminal(() => Terminal);
+    });
+  }, []);
 
   // Keep the latest version of listeners without retriggering the effect
   useEffect(() => {
@@ -38,6 +45,8 @@ export function useXTerm({ options, addons, listeners }: UseXTermProps = {}) {
   }, [listeners]);
 
   useEffect(() => {
+    if (!Terminal) return;
+
     const instance = new Terminal({
       fontFamily:
         "operator mono,SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace",
@@ -78,7 +87,7 @@ export function useXTerm({ options, addons, listeners }: UseXTermProps = {}) {
       instance.dispose();
       setTerminalInstance(null);
     };
-  }, [options, addons]);
+  }, [Terminal, options, addons]);
 
   return {
     ref: terminalRef,

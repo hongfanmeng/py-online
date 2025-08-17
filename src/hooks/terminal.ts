@@ -1,6 +1,6 @@
-import { FitAddon } from "@xterm/addon-fit";
+import type { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export const useTerminalIO = (xterm: Terminal | null) => {
   const stdin = useCallback(() => {
@@ -73,10 +73,16 @@ export const useTerminalFit = (
   xtermRef: React.RefObject<HTMLDivElement | null>,
   xterm: Terminal | null
 ) => {
+  const [fitAddon, setFitAddon] = useState<FitAddon | null>(null);
   useEffect(() => {
-    if (!xterm || !xtermRef.current) return;
+    import("@xterm/addon-fit").then(({ FitAddon }) => {
+      setFitAddon(new FitAddon());
+    });
+  }, []);
 
-    const fitAddon = new FitAddon();
+  useEffect(() => {
+    if (!xterm || !xtermRef.current || !fitAddon) return;
+
     xterm.loadAddon(fitAddon);
     fitAddon.fit();
 
@@ -90,5 +96,5 @@ export const useTerminalFit = (
       window.removeEventListener("resize", handleResize);
       observer.disconnect();
     };
-  }, [xterm, xtermRef]);
+  }, [xterm, xtermRef, fitAddon]);
 };

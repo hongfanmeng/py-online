@@ -37,11 +37,7 @@ export const MonacoEditor = (props: EditorProps) => {
         shikiToMonaco(highlighter, monaco);
       }}
       onMount={(editor, monaco) => {
-        const model = monaco.editor.createModel(
-          DEFAULT_CODE,
-          "python",
-          monaco.Uri.parse("/workspace/main.py")
-        );
+        const model = monaco.editor.createModel(DEFAULT_CODE, "python");
         editor.setModel(model);
       }}
       {...props}
