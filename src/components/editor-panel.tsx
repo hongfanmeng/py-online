@@ -60,7 +60,7 @@ export const EditorPanel = ({
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1">
         <MonacoEditor onChange={(value) => onCodeChange(value ?? "")} />
       </div>
     </div>
