@@ -13,6 +13,7 @@ const PYODIDE_EXCLUDE = [
   "!**/*.d.ts",
   "!**/*.whl",
   "!**/node_modules",
+  "!**/package.json",
 ];
 
 const viteStaticCopyPyodide = () => {
@@ -21,7 +22,7 @@ const viteStaticCopyPyodide = () => {
     targets: [
       {
         src: [join(pyodideDir, "*")].concat(PYODIDE_EXCLUDE),
-        dest: "assets",
+        dest: "assets/pyodide",
       },
     ],
   });

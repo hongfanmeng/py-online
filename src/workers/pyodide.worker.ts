@@ -21,7 +21,7 @@ export interface PyodideWorkerAPI {
 class PyodideWorker implements PyodideWorkerAPI {
   private pyodide: PyodideAPI | null = null;
   private stdout: ((charCode: number) => void) | null = null;
-  private requestStdinInput: (() => Promise<void>) | null = null;
+  private requestStdin: (() => Promise<void>) | null = null;
   private inputBuffer: SharedArrayBuffer | null = null;
   private interruptBuffer: Uint8Array | null = null;
 
@@ -29,7 +29,7 @@ class PyodideWorker implements PyodideWorkerAPI {
 
   async init(): Promise<void> {
     try {
-      this.pyodide = await loadPyodide();
+      this.pyodide = await loadPyodide({ indexURL: "/assets/pyodide" });
     } catch (error) {
       throw new Error(`Failed to initialize Pyodide: ${error}`);
     }
@@ -44,7 +44,7 @@ class PyodideWorker implements PyodideWorkerAPI {
   }
 
   setStdin(requestStdin: () => Promise<void>) {
-    this.requestStdinInput = requestStdin;
+    this.requestStdin = requestStdin;
   }
 
   setInterruptBuffer(interruptBuffer: Uint8Array) {
@@ -81,7 +81,7 @@ class PyodideWorker implements PyodideWorkerAPI {
         if (!this.inputBuffer) return "";
 
         // Request input from the main thread
-        this.requestStdinInput?.();
+        this.requestStdin?.();
 
         // Wait for the main thread to provide input
         Atomics.wait(new Int32Array(this.inputBuffer), 0, 0);
