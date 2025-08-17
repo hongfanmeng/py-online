@@ -1,11 +1,4 @@
-import { MonacoLanguageClient } from "monaco-languageclient";
-
 import pyrightWorkerUrl from "@typefox/pyright-browser/dist/pyright.worker.js?url";
-import {
-  BrowserMessageReader,
-  BrowserMessageWriter,
-} from "vscode-languageserver-protocol/browser.js";
-import { ErrorAction, CloseAction } from "vscode-languageclient";
 import { readZipFile } from "~/utils/zip";
 
 const languageId = "python";
@@ -26,10 +19,20 @@ export const getTypeshedFiles = async () => {
   );
 };
 
-export const createPythonLanguageClient = (
+export const createPythonLanguageClient = async (
   worker: Worker,
   typeshedFiles: { [id: string]: string }
 ) => {
+  const [
+    { MonacoLanguageClient },
+    { ErrorAction, CloseAction },
+    { BrowserMessageReader, BrowserMessageWriter },
+  ] = await Promise.all([
+    import("monaco-languageclient"),
+    import("vscode-languageclient"),
+    import("vscode-languageserver-protocol/browser.js"),
+  ]);
+
   const reader = new BrowserMessageReader(worker);
   const writer = new BrowserMessageWriter(worker);
 

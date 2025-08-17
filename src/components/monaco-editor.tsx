@@ -1,9 +1,12 @@
-import Editor from "@monaco-editor/react";
-import { initMonacoLSP } from "~/utils/monaco-lsp";
-import { shikiToMonaco } from "@shikijs/monaco";
-import { createHighlighter } from "shiki";
-import { useTheme } from "./theme-provider";
+import React from "react";
 
+import { shikiToMonaco } from "@shikijs/monaco";
+import { useTheme } from "~/components/theme-provider";
+import { initMonaco, initMonacoLSP } from "~/utils/monaco-lsp";
+import { highlighter } from "~/utils/shikijs";
+import type { EditorProps } from "@monaco-editor/react";
+
+const Editor = React.lazy(() => initMonaco());
 initMonacoLSP();
 
 const DEFAULT_CODE = `# Welcome to Online Python!
@@ -12,7 +15,7 @@ const DEFAULT_CODE = `# Welcome to Online Python!
 print("Hello, World!")
 `;
 
-export const MonacoEditor = () => {
+export const MonacoEditor = (props: EditorProps) => {
   const { computedTheme } = useTheme();
   const theme = computedTheme === "dark" ? "dark-plus" : "light-plus";
 
@@ -30,10 +33,6 @@ export const MonacoEditor = () => {
       }}
       beforeMount={async (monaco) => {
         monaco.languages.register({ id: "python", extensions: [".py"] });
-        const highlighter = await createHighlighter({
-          themes: ["dark-plus", "light-plus"],
-          langs: ["python"],
-        });
         shikiToMonaco(highlighter, monaco);
       }}
       onMount={(editor, monaco) => {
@@ -44,6 +43,7 @@ export const MonacoEditor = () => {
         );
         editor.setModel(model);
       }}
+      {...props}
     />
   );
 };

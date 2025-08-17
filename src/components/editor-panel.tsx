@@ -1,6 +1,6 @@
 import { Code, Copy, Play, Square } from "lucide-react";
 import { cn } from "~/utils/cn";
-import { MonacoEditor } from "./monaco-editor";
+import { MonacoEditor } from "~/components/monaco-editor";
 
 export type EditorPanelProps = {
   code: string;
@@ -13,14 +13,12 @@ export type EditorPanelProps = {
 
 export const EditorPanel = ({
   code,
-  // onCodeChange,
+  onCodeChange,
   isRunning,
   isReady,
   onRun,
   onStop,
 }: EditorPanelProps) => {
-  // const wrapperRef = useRef<MonacoEditorLanguageClientWrapper>(null);
-
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -63,7 +61,7 @@ export const EditorPanel = ({
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <MonacoEditor />
+        <MonacoEditor onChange={(value) => onCodeChange(value ?? "")} />
       </div>
     </div>
   );
