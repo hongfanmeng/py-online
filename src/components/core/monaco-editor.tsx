@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import { useTheme } from "~/hooks/use-theme";
 import { initMonaco, initMonacoLSP } from "~/utils/monaco-lsp";
@@ -16,7 +16,11 @@ initMonacoLSP();
 
 export const MonacoEditor = (props: EditorProps) => {
   const { computedTheme } = useTheme();
-  const theme = computedTheme === "dark" ? "dark-plus" : "light-plus";
+  const fallbackTheme = computedTheme === "dark" ? "vs-dark" : "light";
+  const shikiTheme = computedTheme === "dark" ? "dark-plus" : "light-plus";
+
+  const [shikiLoaded, setShikiLoaded] = useState(false);
+  const theme = shikiLoaded ? shikiTheme : fallbackTheme;
 
   return (
     <Editor
@@ -34,6 +38,7 @@ export const MonacoEditor = (props: EditorProps) => {
         monaco.languages.register({ id: "python", extensions: [".py"] });
         const highlighter = await getHighlighter();
         shikiToMonaco(highlighter, monaco);
+        setShikiLoaded(true);
       }}
       onMount={(editor, monaco) => {
         const model = monaco.editor.createModel(DEFAULT_CODE, "python");
