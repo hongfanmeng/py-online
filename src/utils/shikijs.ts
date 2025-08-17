@@ -1,12 +1,21 @@
-import { createHighlighterCore } from "shiki/core";
-import { createOnigurumaEngine } from "shiki/engine/oniguruma";
+export const getHighlighter = async () => {
+  const [
+    { createHighlighterCore },
+    { createOnigurumaEngine },
+    darkPlus,
+    lightPlus,
+    python,
+  ] = await Promise.all([
+    import("shiki/core"),
+    import("shiki/engine/oniguruma"),
+    import("@shikijs/themes/dark-plus"),
+    import("@shikijs/themes/light-plus"),
+    import("@shikijs/langs/python"),
+  ]);
 
-import darkPlus from "@shikijs/themes/dark-plus";
-import lightPlus from "@shikijs/themes/light-plus";
-import python from "@shikijs/langs/python";
-
-export const highlighter = await createHighlighterCore({
-  themes: [darkPlus, lightPlus],
-  langs: [python],
-  engine: createOnigurumaEngine(import("shiki/wasm")),
-});
+  return createHighlighterCore({
+    themes: [darkPlus, lightPlus],
+    langs: [python],
+    engine: createOnigurumaEngine(import("shiki/wasm")),
+  });
+};

@@ -1,6 +1,6 @@
 import { Trash2, TerminalIcon } from "lucide-react";
-import { useEffect } from "react";
-import { Terminal } from "@xterm/xterm";
+import React, { useEffect } from "react";
+import type { Terminal } from "@xterm/xterm";
 import { useTheme } from "~/components/theme-provider";
 import { useTerminalFit } from "~/hooks/terminal";
 import { XTERM_DARK_THEME, XTERM_LIGHT_THEME } from "~/utils/xterm-theme";
@@ -11,7 +11,6 @@ export type TerminalPanelProps = {
   onClearOutput: () => void;
 };
 
-// Terminal panel component
 export const TerminalPanel = ({
   xtermRef,
   xterm,

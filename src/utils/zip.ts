@@ -1,4 +1,4 @@
-import JSZip, { type JSZipObject } from "jszip";
+import type { JSZipObject } from "jszip";
 
 const noTrailingSlash = ([name]: [string, JSZipObject]) => {
   return !name.endsWith("/");
@@ -9,6 +9,7 @@ const sanitizeFileName = (filename: string) => {
 };
 
 export const readZipFile = async (url: string) => {
+  const JSZip = await import("jszip");
   try {
     const response = await fetch(url);
     const data = await response.arrayBuffer();

@@ -3,7 +3,7 @@ import React from "react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import { useTheme } from "~/components/theme-provider";
 import { initMonaco, initMonacoLSP } from "~/utils/monaco-lsp";
-import { highlighter } from "~/utils/shikijs";
+import { getHighlighter } from "~/utils/shikijs";
 import type { EditorProps } from "@monaco-editor/react";
 
 const Editor = React.lazy(() => initMonaco());
@@ -33,6 +33,7 @@ export const MonacoEditor = (props: EditorProps) => {
       }}
       beforeMount={async (monaco) => {
         monaco.languages.register({ id: "python", extensions: [".py"] });
+        const highlighter = await getHighlighter();
         shikiToMonaco(highlighter, monaco);
       }}
       onMount={(editor, monaco) => {
