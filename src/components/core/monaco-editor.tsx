@@ -1,19 +1,18 @@
 import React from "react";
-
 import { shikiToMonaco } from "@shikijs/monaco";
-import { useTheme } from "~/components/theme-provider";
+import { useTheme } from "~/hooks/use-theme";
 import { initMonaco, initMonacoLSP } from "~/utils/monaco-lsp";
 import { getHighlighter } from "~/utils/shikijs";
 import type { EditorProps } from "@monaco-editor/react";
 
-const Editor = React.lazy(() => initMonaco());
-initMonacoLSP();
-
-const DEFAULT_CODE = `# Welcome to Online Python!
+export const DEFAULT_CODE = `# Welcome to Online Python!
 # Write your Python code here
 
 print("Hello, World!")
 `;
+
+const Editor = React.lazy(() => initMonaco());
+initMonacoLSP();
 
 export const MonacoEditor = (props: EditorProps) => {
   const { computedTheme } = useTheme();

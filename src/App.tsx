@@ -1,50 +1,39 @@
 import { useState } from "react";
 import Split from "react-split";
-import { EditorPanel, Footer, Header, TerminalPanel } from "~/components";
-import { ThemeProvider } from "~/components/theme-provider";
-import { usePyodideWorker } from "~/hooks/pyodide";
-import { useTerminalIO, useTerminalStatus } from "~/hooks/terminal";
-import { useXTerm } from "~/hooks/xterm";
-import { filterError } from "~/utils/ide";
-
-const DEFAULT_CODE = `# Welcome to Online Python!
-# Write your Python code here
-
-print("Hello, World!")
-`;
+import { Footer, Header } from "~/components/layout";
+import { EditorPanel } from "~/components/panels/editor-panel";
+import { TerminalPanel } from "~/components/panels/terminal-panel";
+import { ThemeProvider } from "~/components/theme/theme-provider";
+import { useAppState } from "~/hooks/use-app-state";
+import { usePyodideWorker } from "~/hooks/use-pyodide-worker";
+import { useTerminalIO } from "~/hooks/use-terminal";
+import { useXTerm } from "~/hooks/use-xterm";
+import { filterPyodideErrors } from "~/utils/error-handler";
+import { DEFAULT_CODE } from "~/components/core/monaco-editor";
 
 function App() {
   const [code, setCode] = useState(DEFAULT_CODE);
-  const [isRunning, setIsRunning] = useState(false);
+
+  const { setIsRunning, isRunning, isReady } = useAppState();
 
   const { ref: xtermRef, instance: xterm } = useXTerm();
-
-  // Custom hooks for terminal functionality
   const { stdin, stdout } = useTerminalIO(xterm);
+  const { runCode, stop } = usePyodideWorker({ stdin, stdout });
 
-  const {
-    isReady,
-    error,
-    runCode: runCodeInWorker,
-    stop: onStop,
-  } = usePyodideWorker({ stdin, stdout });
-
-  useTerminalStatus(xterm, isReady, error);
-
-  const onRun = async () => {
-    if (!isReady || !xterm || isRunning) return;
+  const executeCode = async (code: string) => {
+    if (!isReady || isRunning || !xterm) return;
 
     setIsRunning(true);
     xterm.clear();
 
-    const result = await runCodeInWorker(code);
+    const result = await runCode(code);
 
     // do a sleep(0) for the remaining output to be printed
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Display error if any
     if (result.error) {
-      const errorLines = filterError(result.error.split("\n"));
+      const errorLines = filterPyodideErrors(result.error.split("\n"));
       for (const line of errorLines) xterm.writeln(line);
     }
 
@@ -57,20 +46,13 @@ function App() {
     setIsRunning(false);
   };
 
-  const clearOutput = () => {
-    xterm?.clear();
-  };
+  const onRun = () => executeCode(code);
+  const onStop = () => stop();
 
   return (
     <ThemeProvider defaultTheme="system">
       <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        <Header
-          isReady={isReady}
-          isRunning={isRunning}
-          onRun={onRun}
-          onStop={onStop}
-        />
-
+        <Header onRun={onRun} onStop={onStop} />
         <Split
           className="flex flex-row flex-1"
           direction="horizontal"
@@ -88,18 +70,11 @@ function App() {
           <EditorPanel
             code={code}
             onCodeChange={setCode}
-            isRunning={isRunning}
-            isReady={isReady}
             onRun={onRun}
             onStop={onStop}
           />
-          <TerminalPanel
-            xterm={xterm}
-            xtermRef={xtermRef}
-            onClearOutput={clearOutput}
-          />
+          <TerminalPanel xterm={xterm} xtermRef={xtermRef} />
         </Split>
-
         <Footer />
       </div>
     </ThemeProvider>

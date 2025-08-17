@@ -1,24 +1,20 @@
 import { Code, Copy, Play, Square } from "lucide-react";
+import { MonacoEditor } from "~/components/core/monaco-editor";
+import { useAppState } from "~/hooks/use-app-state";
 import { cn } from "~/utils/cn";
-import { MonacoEditor } from "~/components/monaco-editor";
 
 export type EditorPanelProps = {
   code: string;
   onCodeChange: (value: string) => void;
-  isRunning: boolean;
-  isReady: boolean;
   onRun: () => void;
   onStop: () => void;
 };
 
-export const EditorPanel = ({
-  code,
-  onCodeChange,
-  isRunning,
-  isReady,
-  onRun,
-  onStop,
-}: EditorPanelProps) => {
+export const EditorPanel = (props: EditorPanelProps) => {
+  const { code, onCodeChange, onRun, onStop } = props;
+
+  const { isRunning, isReady } = useAppState();
+
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);

@@ -23,6 +23,7 @@
     "@xterm/xterm": "^5.5.0",
     "clsx": "^2.1.1",
     "comlink": "^4.4.2",
+    "jotai": "^2.13.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.539.0",
     "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~20.1.1",

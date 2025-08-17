@@ -1,15 +1,15 @@
 import { Play, Square } from "lucide-react";
 import { cn } from "~/utils/cn";
-import { ThemeToggle } from "~/components/theme-toggle";
+import { ThemeToggle } from "~/components/theme/theme-toggle";
+import { useAppState } from "~/hooks/use-app-state";
 
 export type HeaderProps = {
-  isReady: boolean;
-  isRunning: boolean;
   onRun: () => void;
   onStop: () => void;
 };
 
-export const Header = ({ isReady, isRunning, onRun, onStop }: HeaderProps) => {
+export const Header = ({ onRun, onStop }: HeaderProps) => {
+  const { isRunning, isReady } = useAppState();
   return (
     <header
       className={cn(

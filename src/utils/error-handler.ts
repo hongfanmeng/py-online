@@ -1,4 +1,4 @@
-export const filterError = (lines: string[]) => {
+export const filterPyodideErrors = (lines: string[]) => {
   const isPyodideFile = (line: string) =>
     line.includes('File "/lib/python313.zip/_pyodide/_base.py"') ||
     line.includes("_pyodide/_base.py");

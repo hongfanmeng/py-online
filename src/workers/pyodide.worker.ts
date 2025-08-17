@@ -2,8 +2,8 @@ import { expose } from "comlink";
 import { loadPyodide, type PyodideAPI } from "pyodide";
 
 // Constants
-const INPUT_LENGTH_INDEX = 1;
-const INPUT_DATA_OFFSET = 8;
+export const INPUT_LENGTH_INDEX = 1;
+export const INPUT_DATA_OFFSET = 8;
 
 export interface PyodideWorkerAPI {
   init(): Promise<void>;
@@ -18,14 +18,17 @@ export interface PyodideWorkerAPI {
   setInputBuffer(inputBuffer: SharedArrayBuffer): void;
 }
 
+export interface RunCodeResult {
+  success: boolean;
+  error?: string;
+}
+
 class PyodideWorker implements PyodideWorkerAPI {
   private pyodide: PyodideAPI | null = null;
   private stdout: ((charCode: number) => void) | null = null;
   private requestStdin: (() => Promise<void>) | null = null;
   private inputBuffer: SharedArrayBuffer | null = null;
   private interruptBuffer: Uint8Array | null = null;
-
-  constructor() {}
 
   async init(): Promise<void> {
     try {
@@ -39,24 +42,24 @@ class PyodideWorker implements PyodideWorkerAPI {
     return this.pyodide !== null;
   }
 
-  setStdout(stdout: (charCode: number) => void) {
+  setStdout(stdout: (charCode: number) => void): void {
     this.stdout = stdout;
   }
 
-  setStdin(requestStdin: () => Promise<void>) {
+  setStdin(requestStdin: () => Promise<void>): void {
     this.requestStdin = requestStdin;
   }
 
-  setInterruptBuffer(interruptBuffer: Uint8Array) {
+  setInterruptBuffer(interruptBuffer: Uint8Array): void {
     this.interruptBuffer = interruptBuffer;
     this.pyodide?.setInterruptBuffer(interruptBuffer);
   }
 
-  setInputBuffer(inputBuffer: SharedArrayBuffer) {
+  setInputBuffer(inputBuffer: SharedArrayBuffer): void {
     this.inputBuffer = inputBuffer;
   }
 
-  private setupStdoutCapture() {
+  private setupStdoutCapture(): void {
     if (!this.pyodide) return;
 
     this.pyodide.setStdout({
@@ -67,13 +70,12 @@ class PyodideWorker implements PyodideWorkerAPI {
 
     this.pyodide.setStderr({
       raw: (charCode: number) => {
-        console.log(123);
         this.stdout?.(charCode);
       },
     });
   }
 
-  private setupStdinCapture() {
+  private setupStdinCapture(): void {
     if (!this.pyodide) return;
 
     this.pyodide.setStdin({
@@ -117,7 +119,7 @@ class PyodideWorker implements PyodideWorkerAPI {
     }
   }
 
-  async runCode(code: string): Promise<{ success: boolean; error?: string }> {
+  async runCode(code: string): Promise<RunCodeResult> {
     if (!this.pyodide) {
       throw new Error("Pyodide not initialized");
     }

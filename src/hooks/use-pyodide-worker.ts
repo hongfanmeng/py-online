@@ -1,13 +1,25 @@
 import * as Comlink from "comlink";
 import { wrap, type Remote } from "comlink";
-import { useEffect, useRef, useState } from "react";
-import { type PyodideWorkerAPI } from "~/workers/pyodide.worker";
+import { useEffect, useRef } from "react";
+import {
+  INPUT_DATA_OFFSET,
+  INPUT_LENGTH_INDEX,
+  type PyodideWorkerAPI,
+  type RunCodeResult,
+} from "~/workers/pyodide.worker";
 import PyodideWorker from "~/workers/pyodide.worker?worker";
+import { useAppState } from "~/hooks/use-app-state";
 
-interface RunCodeResult {
-  success: boolean;
-  error?: string;
-}
+const SHARED_ARRAY_BUFFER_NOT_SUPPORTED = `
+SharedArrayBuffer is not supported in this environment. 
+Please ensure the page is served with the following HTTP headers:
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+These headers are required for Pyodide to function properly.
+`.trim();
+
+const INPUT_BUFFER_SIZE = 1024;
+const INTERRUPT_SIGNAL = 2;
 
 export interface UsePyodideWorkerProps {
   stdin?: () => Promise<string>;
@@ -15,31 +27,21 @@ export interface UsePyodideWorkerProps {
 }
 
 export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { setIsReady, setError } = useAppState();
 
   const workerRef = useRef<Worker | null>(null);
   const workerAPIRef = useRef<Remote<PyodideWorkerAPI> | null>(null);
-
   const sharedInputBufferRef = useRef<SharedArrayBuffer | null>(null);
   const interruptBufferRef = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     if (!crossOriginIsolated) {
-      setError(
-        [
-          "SharedArrayBuffer is not supported in this environment. ",
-          "Please ensure the page is served with the following HTTP headers:",
-          "  Cross-Origin-Opener-Policy: same-origin",
-          "  Cross-Origin-Embedder-Policy: require-corp",
-          "These headers are required for Pyodide to function properly.",
-        ].join("\n")
-      );
+      setError(SHARED_ARRAY_BUFFER_NOT_SUPPORTED);
       return;
     }
 
-    // create buffer
-    const sharedInputBuffer = new SharedArrayBuffer(1024);
+    // Create shared buffers
+    const sharedInputBuffer = new SharedArrayBuffer(INPUT_BUFFER_SIZE);
     const interruptBuffer = new Uint8Array(new SharedArrayBuffer(1));
     sharedInputBufferRef.current = sharedInputBuffer;
     interruptBufferRef.current = interruptBuffer;
@@ -66,6 +68,7 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
     initPyodide();
 
     return () => {
+      setIsReady(false);
       worker.terminate();
       workerRef.current = null;
       workerAPIRef.current = null;
@@ -85,10 +88,10 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
       const bufferControlArray = new Int32Array(sharedInputBufferRef.current!);
 
       // Store the input length at index 1 for the worker to read
-      bufferControlArray[1] = encodedInputBytes.length;
+      bufferControlArray[INPUT_LENGTH_INDEX] = encodedInputBytes.length;
 
       // Copy the encoded input bytes starting at byte 8 (after control data)
-      inputBufferBytes.set(encodedInputBytes, 8);
+      inputBufferBytes.set(encodedInputBytes, INPUT_DATA_OFFSET);
 
       // Signal the worker that input is ready
       Atomics.notify(new Int32Array(sharedInputBufferRef.current!), 0);
@@ -112,9 +115,9 @@ export function usePyodideWorker({ stdin, stdout }: UsePyodideWorkerProps) {
 
   const stop = () => {
     if (interruptBufferRef.current) {
-      interruptBufferRef.current[0] = 2;
+      interruptBufferRef.current[0] = INTERRUPT_SIGNAL;
     }
   };
 
-  return { isReady, error, runCode, stop };
+  return { runCode, stop };
 }

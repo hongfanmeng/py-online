@@ -1,6 +1,7 @@
 import type { FitAddon } from "@xterm/addon-fit";
 import type { Terminal } from "@xterm/xterm";
 import { useCallback, useEffect, useState } from "react";
+import { useAppState } from "~/hooks/use-app-state";
 
 export const useTerminalIO = (xterm: Terminal | null) => {
   const stdin = useCallback(() => {
@@ -40,12 +41,9 @@ export const useTerminalIO = (xterm: Terminal | null) => {
   return { stdin, stdout };
 };
 
-// Manages terminal status messages
-export const useTerminalStatus = (
-  xterm: Terminal | null,
-  isReady: boolean,
-  error: string | null
-) => {
+export const useTerminalStatus = (xterm: Terminal | null) => {
+  const { isReady, error } = useAppState();
+
   useEffect(() => {
     if (!xterm) return;
 

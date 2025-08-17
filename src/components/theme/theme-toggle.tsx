@@ -1,12 +1,12 @@
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "~/components/theme-provider";
+import { useTheme } from "~/hooks/use-theme";
 import { cn } from "~/utils/cn";
 
 export const ThemeToggle = () => {
   const { setTheme, computedTheme } = useTheme();
 
   const handleToggle = () => {
-    setTheme(computedTheme == "dark" ? "light" : "dark");
+    setTheme(computedTheme === "dark" ? "light" : "dark");
   };
 
   const Icon = computedTheme === "dark" ? Moon : Sun;

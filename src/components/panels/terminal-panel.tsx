@@ -1,21 +1,16 @@
 import { Trash2, TerminalIcon } from "lucide-react";
 import React, { useEffect } from "react";
 import type { Terminal } from "@xterm/xterm";
-import { useTheme } from "~/components/theme-provider";
-import { useTerminalFit } from "~/hooks/terminal";
+import { useTheme } from "~/hooks/use-theme";
+import { useTerminalFit } from "~/hooks/use-terminal";
 import { XTERM_DARK_THEME, XTERM_LIGHT_THEME } from "~/utils/xterm-theme";
 
 export type TerminalPanelProps = {
   xtermRef: React.RefObject<HTMLDivElement | null>;
   xterm: Terminal | null;
-  onClearOutput: () => void;
 };
 
-export const TerminalPanel = ({
-  xtermRef,
-  xterm,
-  onClearOutput,
-}: TerminalPanelProps) => {
+export const TerminalPanel = ({ xtermRef, xterm }: TerminalPanelProps) => {
   const { computedTheme } = useTheme();
 
   useEffect(() => {
@@ -25,6 +20,10 @@ export const TerminalPanel = ({
   }, [xterm, computedTheme]);
 
   useTerminalFit(xtermRef, xterm);
+
+  const onClear = () => {
+    xterm?.clear();
+  };
 
   return (
     <div className="flex flex-col border-l border-border h-full">
@@ -37,7 +36,7 @@ export const TerminalPanel = ({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={onClearOutput}
+            onClick={onClear}
             className="flex items-center gap-1 px-2 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded text-xs cursor-pointer"
             title="Clear Output"
           >
