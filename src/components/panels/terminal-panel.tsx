@@ -48,6 +48,12 @@ export const TerminalPanel = ({ xtermRef, xterm }: TerminalPanelProps) => {
       <div
         ref={xtermRef}
         className="w-full flex-1 min-h-0 [&>.xterm]:p-4 dark:scheme-dark"
+        style={{
+          backgroundColor:
+            computedTheme === "light"
+              ? XTERM_LIGHT_THEME.background
+              : XTERM_DARK_THEME.background,
+        }}
       />
     </div>
   );

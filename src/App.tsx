@@ -56,7 +56,7 @@ function App() {
       <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
         <Header onRun={onRun} onStop={onStop} />
         <Split
-          className="flex flex-row flex-1"
+          className="flex flex-row flex-1 min-h-0"
           direction="horizontal"
           minSize={500}
           gutterSize={0}
